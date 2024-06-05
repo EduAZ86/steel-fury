@@ -1,12 +1,12 @@
-import { Transform } from "./transform.class";
+import { Transform } from "./transform";
 
-type componentsProvider = (obj: any) => void
+type componentsProvider = (obj: GameObject) => void
 
 export class GameObject {
     name: string;
     active: boolean;
     destroyed: boolean;
-    components: any[];
+    components: GameObject[];
     transform: Transform;
     constructor(name: string, transform: Transform, componentsProvider: componentsProvider) {
         this.active = true;
@@ -21,32 +21,30 @@ export class GameObject {
 
     get getDestroyed() { return this.destroyed };
 
+    get GetComponents() {
+        return this.components;
+    }
+
     set SetActive(active: boolean) {
         if (active === this.active)
             return;
         this.active = active;
     }
 
-    AddComponent(component: any) {
+    AddComponent(component: GameObject) {
         this.components.push(component);
         this.InitializeComponent(component);
         return component;
     }
 
-    RemoveComponent(component: any) {
+    RemoveComponent(component: GameObject) {
         this.components.filter(c => c !== component);
     }
-    GetComponent(classRef: any) {
-        var obj = this.components.find(c => c instanceof classRef);
-        return obj;
-    }
-    GetComponents() {
-        return this.components;
-    }
 
-    InitializeComponent(component: any) {
-        component.gameObject = this;
-        component.Awake();
+
+    InitializeComponent(component: GameObject) {
+        component.active = true;
+
     }
 
     static Destroy(gameObject: GameObject) {

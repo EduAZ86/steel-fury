@@ -63,5 +63,4 @@ export class Vector2D {
         yPrime += origin.y;
         return new Vector2D(xPrime, yPrime);
     }
-
 }
