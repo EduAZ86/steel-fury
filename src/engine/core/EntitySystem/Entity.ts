@@ -1,14 +1,9 @@
-import { UUID } from "crypto";
 import { GameObject } from "./gameObject";
-import { v4 as uuidv4 } from 'uuid';
 import { RigidBody2D } from "./rigidBody2D";
-import { bodyType, magnitudes } from "./types";
-
-
+import { Iposition, Isize, bodyType, magnitudes } from "./types";
+import { Collision2D } from "../Collision2D/Collision2D";
 export class Entity {
-    id: UUID;
     name: string;
-
     healt: number;
     started: boolean;
     coroutines: any[];
@@ -18,7 +13,7 @@ export class Entity {
         this.started = false;
         this.coroutines = [];
         this.gameObject = gameObject;
-        this.id = uuidv4() as UUID;
+
         this.name = name;
         this.healt = healt;
         this.rigidBody = new RigidBody2D(
@@ -27,7 +22,6 @@ export class Entity {
             gameObject.transform.position,
             gameObject.transform.scale
         )
-
     }
 
     get getTransform() { return this.gameObject.transform; }
@@ -38,28 +32,20 @@ export class Entity {
     }
     Start() {
     }
-    Update() {
+    Update(newPosition?: Iposition, newScale?: Isize, newRotation?: number) {
+        newPosition && this.gameObject.transform.updatePosition(newPosition);
+        newScale && this.gameObject.transform.updateScale(newScale);
+        newRotation && this.gameObject.transform.updateRotation(newRotation);
     }
     OnDestroy() {
+        this.gameObject.Destroy()
     }
-    // OnCollisionEnter2D(otherCollider) {
-    // }
-    // OnCollisionStay2D(otherCollider) {
-    // }
-    // OnCollisionExit2D(otherCollider) {
-    // }
+    OnCollisionEnter2D(otherCollider: GameObject[]) {
+        otherCollider.forEach((collider) => {
 
-    // StartCoroutine(enumerator:any) {
-    //     const cor = new Coroutine(enumerator);
-    //     this.coroutines.push(cor);
-    //     return cor;
-    // }
-    // StopCoroutine(coroutine) {
-    //     this.coroutines.remove(coroutine);
-    // }
-    // StopAllCoroutines() {
-    //     this.coroutines.clear();
-    // }
+            const collisions = new Collision2D(this.rigidBody.collisionShape, collider.rigidBody.collisionShape)
+        })
+    }
 
     CheckStart() {
         this.started = true;
@@ -75,3 +61,27 @@ export class Entity {
         this.coroutines = this.coroutines.filter(c => !c.isFinished);
     }
 }
+
+
+
+
+
+
+
+
+// OnCollisionStay2D(otherCollider) {
+// }
+// OnCollisionExit2D(otherCollider) {
+// }
+
+// StartCoroutine(enumerator:any) {
+//     const cor = new Coroutine(enumerator);
+//     this.coroutines.push(cor);
+//     return cor;
+// }
+// StopCoroutine(coroutine) {
+//     this.coroutines.remove(coroutine);
+// }
+// StopAllCoroutines() {
+//     this.coroutines.clear();
+// }

@@ -3,8 +3,8 @@ import { Vector2D } from "./geometry/Vector2D";
 export type bodyType = 'dynamic' | 'kinetic' | 'static';
 
 
-interface acceleration extends position { }
-export interface size extends position { }
+interface acceleration extends Iposition { }
+export interface Isize extends Iposition { }
 
 export interface magnitudes {
     velocity: Vector2D;
@@ -13,12 +13,8 @@ export interface magnitudes {
     mass: number;
 }
 
-export interface position {
+export interface Iposition {
     x: number;
     y: number;
 }
 
-export interface collisionShape {
-    origin: position;
-    end: position;
-}
