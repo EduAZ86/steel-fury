@@ -1,4 +1,6 @@
+
 import { drawIteration, updateIteration } from "./Iteration";
+import { DeltaTime } from "./deltaTime";
 
 export class MainLoop {
     private executionId: number | null = null
@@ -7,6 +9,7 @@ export class MainLoop {
     private fps: number = 0;
     private updateIteration: updateIteration;
     private drawIteration: drawIteration;
+    private deltaTime: DeltaTime;
 
     constructor(
         updateIteration: updateIteration,
@@ -14,6 +17,7 @@ export class MainLoop {
     ) {
         this.updateIteration = updateIteration;
         this.drawIteration = drwwIteration;
+        this.deltaTime = new DeltaTime();
     }
     public iteration = (timeRecord?: number) => {
         if (typeof window !== 'undefined') {

@@ -18,3 +18,9 @@ export interface Iposition {
     y: number;
 }
 
+export interface CollisionData {
+    relativeVelocities: { x: number, y: number };
+    localColliderType: bodyType;
+    otherColliderType: bodyType;
+    directionCollision: collisionFace[];
+}
