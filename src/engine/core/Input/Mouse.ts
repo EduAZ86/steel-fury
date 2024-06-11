@@ -36,7 +36,7 @@ export class MouseInput {
         this.scrollDelta = event.deltaY;
     }
 
-    public getMousePosition(): void {
+    public startTracking(): void {
         if (!this._isTracking) {
             document.addEventListener('mousemove', this._handleMouseMove);
             document.addEventListener('wheel', this._handleMouseScroll);
