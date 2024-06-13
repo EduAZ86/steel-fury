@@ -1,12 +1,18 @@
 export class DeltaTime {
-    private previusTime: number;
+    private _previusTime: number;
+    private _deltaTime: number;
     constructor() {
-        this.previusTime = performance.now();
+        this._previusTime = performance.now();
+        this._deltaTime = 0;
+        this._updateDeltaTime()
     }
-    public getDeltaTime() {
+    private _updateDeltaTime() {
         const currentTime = performance.now();
-        const deltaTime = currentTime - this.previusTime;
-        this.previusTime = currentTime;
-        return deltaTime
+        const delta = currentTime - this._previusTime;
+        this._previusTime = currentTime;
+        this._deltaTime = delta;
+    }
+    public get getDeltaTime() {
+        return this._deltaTime;
     }
 }

@@ -17,15 +17,19 @@ export class Inputs {
 
     public get getDataInputs() {
         if (this._isTracking) {
-            return {
-                mouse: {
+            const inputData = [];
+            if (this.inputsDevice.includes('Keyboard')) {
+                inputData.push({
                     Left: this.mouseInput.leftClick,
                     Right: this.mouseInput.rightClick,
                     scroll: this.mouseInput.scrollDelta,
                     position: this.mouseInput.mousePosition
-                },
-                keyboard: this.keyboardInput.keysStatus
+                })
             }
+            if (this.inputsDevice.includes('Mouse')) {
+                inputData.push(this.keyboardInput.keysStatus)
+            }
+            return inputData
         }
         return
     }
@@ -43,6 +47,7 @@ export class Inputs {
             return
         }
     }
+
     public stopTracking() {
         if (this._isTracking) {
             this.keyboardInput.stopTracking()
