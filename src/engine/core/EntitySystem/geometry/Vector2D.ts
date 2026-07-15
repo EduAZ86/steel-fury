@@ -40,8 +40,8 @@ export class Vector2D {
         return new Vector2D(this.x * num, this.y * num);
     }
 
-    public DotProduct(vector: Vector2D) {
-        return new Vector2D(this.x * vector.x, this.y * vector.y);
+    public DotProduct(vector: Vector2D): number {
+        return this.x * vector.x + this.y * vector.y;
     }
 
     public InvertY() {
@@ -55,8 +55,9 @@ export class Vector2D {
     public Rotate(angleDeg: number, origin: Vector2D) {
         const x = this.x - origin.x;
         const y = this.y - origin.y;
-        const cos = Math.cos(angleDeg / 2 / Math.PI);
-        const sin = Math.sin(angleDeg / 2 / Math.PI);
+        const angleRad = angleDeg * (Math.PI / 180);
+        const cos = Math.cos(angleRad);
+        const sin = Math.sin(angleRad);
         let xPrime = (x * cos) - (y * sin);
         let yPrime = (x * sin) - (y * cos);
         xPrime += origin.x;

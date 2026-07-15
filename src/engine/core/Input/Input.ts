@@ -37,14 +37,12 @@ export class Inputs {
     public startTracking() {
         if (!this._isTracking) {
             if (this.inputsDevice.includes('Keyboard')) {
-                this.keyboardInput.startTracking()
-                this._isTracking = true;
+                this.keyboardInput.getKeys()
             }
             if (this.inputsDevice.includes('Mouse')) {
                 this.mouseInput.startTracking()
-                this._isTracking = true;
             }
-            return
+            this._isTracking = true;
         }
     }
 

@@ -18,8 +18,9 @@ export class ArrowSpaceEnterEscKeys {
     esc: boolean;
     enter: boolean;
     private _trackingKeys: boolean;
-    private _handleKeys: (event: KeyboardEvent) => void;
-    keyMap: any
+    private _handleKeyDown: (event: KeyboardEvent) => void;
+    private _handleKeyUp: (event: KeyboardEvent) => void;
+    private keyMap: Record<string, keyof keys>;
 
     constructor() {
         this.arrowLeft = false;
@@ -30,7 +31,8 @@ export class ArrowSpaceEnterEscKeys {
         this.esc = false;
         this.enter = false;
         this._trackingKeys = false;
-        this._handleKeys = this.updateKeys.bind(this);
+        this._handleKeyDown = this.onKeyDown.bind(this);
+        this._handleKeyUp = this.onKeyUp.bind(this);
         this.keyMap = {
             'ArrowLeft': 'arrowLeft',
             'ArrowRight': 'arrowRight',
@@ -54,23 +56,32 @@ export class ArrowSpaceEnterEscKeys {
         };
     }
 
-    private updateKeys(event: KeyboardEvent): void {
-        this.hashKeys[event.key] = true;
+    private onKeyDown(event: KeyboardEvent): void {
+        const prop = this.keyMap[event.key];
+        if (prop) {
+            this[prop] = true;
+        }
+    }
 
+    private onKeyUp(event: KeyboardEvent): void {
+        const prop = this.keyMap[event.key];
+        if (prop) {
+            this[prop] = false;
+        }
     }
 
     public getKeys() {
         if (!this._trackingKeys) {
-            document.addEventListener('keydown', this._handleKeys);
-            document.addEventListener('keyup', this._handleKeys);
+            document.addEventListener('keydown', this._handleKeyDown);
+            document.addEventListener('keyup', this._handleKeyUp);
             this._trackingKeys = true;
         }
     }
 
     public stopTracking() {
         if (this._trackingKeys) {
-            document.removeEventListener('keydown', this._handleKeys);
-            document.removeEventListener('keyup', this._handleKeys);
+            document.removeEventListener('keydown', this._handleKeyDown);
+            document.removeEventListener('keyup', this._handleKeyUp);
             this._trackingKeys = false;
         }
     }

@@ -1,30 +1,56 @@
+export type ResizeCallback = (width: number, height: number) => void;
+
 export class ScreenSize {
-    private width: number
-    private height: number
+    private width: number;
+    private height: number;
+    private _onResize: ResizeCallback | null = null;
+
     constructor() {
-        this.width = ((typeof window !== 'undefined') && window.innerWidth) || ((typeof document !== 'undefined') && document.documentElement.clientWidth) || ((typeof document !== 'undefined') && document.body.clientWidth) || 0;
-        this.height = ((typeof window !== 'undefined') && window.innerHeight) || ((typeof document !== 'undefined') && document.documentElement.clientHeight) || ((typeof document !== 'undefined') && document.body.clientHeight) || 0;
+        this.width = this.getWidthFromWindow();
+        this.height = this.getHeightFromWindow();
+    }
+
+    private getWidthFromWindow(): number {
+        if (typeof window !== 'undefined') return window.innerWidth;
+        if (typeof document !== 'undefined') return document.documentElement.clientWidth || 0;
+        return 0;
+    }
+
+    private getHeightFromWindow(): number {
+        if (typeof window !== 'undefined') return window.innerHeight;
+        if (typeof document !== 'undefined') return document.documentElement.clientHeight || 0;
+        return 0;
     }
 
     public start() {
         if (typeof window !== 'undefined') {
-            window.addEventListener("resize", this.updateDimensions.bind(this));
+            window.addEventListener('resize', this.updateDimensions.bind(this));
+        }
+    }
+
+    public stop() {
+        if (typeof window !== 'undefined') {
+            window.removeEventListener('resize', this.updateDimensions.bind(this));
         }
     }
 
     private updateDimensions() {
-        if (typeof window !== 'undefined') {
-            this.width = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
-            this.height = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
-            console.log(`width: ${this.width} | height ${this.height}`);
-
+        this.width = this.getWidthFromWindow();
+        this.height = this.getHeightFromWindow();
+        if (this._onResize) {
+            this._onResize(this.width, this.height);
         }
     }
 
+    public set onResize(callback: ResizeCallback) {
+        this._onResize = callback;
+    }
+
     public getWidth() {
-        return this.width
+        return this.width;
     }
-    public getheight() {
-        return this.height
+
+    public getHeight() {
+        return this.height;
     }
-};
+}

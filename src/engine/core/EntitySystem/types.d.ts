@@ -1,4 +1,5 @@
 import { Vector2D } from "./geometry/Vector2D";
+import { collisionFace } from "../Collision2D/types";
 
 export type bodyType = 'dynamic' | 'kinetic' | 'static';
 

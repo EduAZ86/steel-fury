@@ -5,12 +5,14 @@ export class SquareShape {
 
     position: Iposition;
     size: Iposition;
-    vertices: verticesSquare;
 
     constructor(position: Iposition, size: Isize) {
         this.position = position;
         this.size = size;
-        this.vertices = {
+    }
+
+    get vertices(): verticesSquare {
+        return {
             bR: {
                 x: this.position.x,
                 y: this.position.y
@@ -27,6 +29,6 @@ export class SquareShape {
                 x: this.position.x + this.size.x,
                 y: this.position.y + this.size.y
             }
-        }
+        };
     }
 }

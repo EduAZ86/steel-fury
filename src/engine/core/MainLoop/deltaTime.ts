@@ -1,18 +1,30 @@
 export class DeltaTime {
-    private _previusTime: number;
+    private _previousTime: number;
     private _deltaTime: number;
+    private _started: boolean;
+
     constructor() {
-        this._previusTime = performance.now();
+        this._previousTime = 0;
         this._deltaTime = 0;
-        this._updateDeltaTime()
+        this._started = false;
     }
-    private _updateDeltaTime() {
-        const currentTime = performance.now();
-        const delta = currentTime - this._previusTime;
-        this._previusTime = currentTime;
-        this._deltaTime = delta;
+
+    public update(currentTime: number) {
+        if (!this._started) {
+            this._previousTime = currentTime;
+            this._started = true;
+            this._deltaTime = 0;
+            return;
+        }
+        this._deltaTime = currentTime - this._previousTime;
+        this._previousTime = currentTime;
     }
+
     public get getDeltaTime() {
         return this._deltaTime;
+    }
+
+    public get getDeltaTimeSeconds() {
+        return this._deltaTime / 1000;
     }
 }

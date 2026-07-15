@@ -4,8 +4,8 @@ import { magnitudes } from "../core/EntitySystem/types";
 
 export class MapGame extends Entity {
     mapObjects: GameObject[];
-    constructor(name: string, healt: number, magnitudes: magnitudes, gameObject: GameObject) {
-        super(name, 'static', healt, magnitudes, gameObject)
+    constructor(name: string, health: number, magnitudes: magnitudes, gameObject: GameObject) {
+        super(name, 'static', health, magnitudes, gameObject)
         this.mapObjects = []
     }
 

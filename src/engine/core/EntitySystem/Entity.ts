@@ -3,18 +3,18 @@ import { RigidBody2D } from "./rigidBody2D";
 import { Iposition, Isize, bodyType, magnitudes } from "./types";
 export class Entity {
     name: string;
-    healt: number;
+    health: number;
     started: boolean;
     coroutines: any[];
     gameObject: GameObject;
     rigidBody: RigidBody2D;
-    constructor(name: string, bodyType: bodyType, healt: number, magnitudes: magnitudes, gameObject: GameObject) {
+    constructor(name: string, bodyType: bodyType, health: number, magnitudes: magnitudes, gameObject: GameObject) {
         this.started = false;
         this.coroutines = [];
         this.gameObject = gameObject;
 
         this.name = name;
-        this.healt = healt;
+        this.health = health;
         this.rigidBody = new RigidBody2D(
             bodyType,
             magnitudes,

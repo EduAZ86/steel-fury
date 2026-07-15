@@ -7,26 +7,32 @@ export class MainLoop {
     private lastRecord: number = 0;
     private aps: number = 0;
     private fps: number = 0;
+    private _running: boolean = false;
     private updateIteration: updateIteration;
     private drawIteration: drawIteration;
     private deltaTime: DeltaTime;
 
     constructor(
         updateIteration: updateIteration,
-        drwwIteration: drawIteration
+        drawIteration: drawIteration
     ) {
         this.updateIteration = updateIteration;
-        this.drawIteration = drwwIteration;
+        this.drawIteration = drawIteration;
         this.deltaTime = new DeltaTime();
     }
+
     public iteration = (timeRecord?: number) => {
+        if (!this._running) return;
+
         if (typeof window !== 'undefined') {
             this.executionId = window.requestAnimationFrame(this.iteration);
         }
+
+        this.deltaTime.update(timeRecord!);
+
         this.update(timeRecord!);
         this.draw(timeRecord!);
 
-        //FPS and APS counter
         if (timeRecord && (timeRecord - this.lastRecord > 999)) {
             this.lastRecord = timeRecord;
             console.log(`APS: ${this.aps} | FPS: ${this.fps}`);
@@ -54,5 +60,27 @@ export class MainLoop {
         this.drawIteration.drawEffects();
     };
 
-    public stop = () => { };
+    public start() {
+        if (!this._running) {
+            this._running = true;
+            this.lastRecord = performance.now();
+            this.iteration(performance.now());
+        }
+    }
+
+    public stop = () => {
+        this._running = false;
+        if (this.executionId !== null && typeof window !== 'undefined') {
+            window.cancelAnimationFrame(this.executionId);
+            this.executionId = null;
+        }
+    };
+
+    public get getDeltaTime() {
+        return this.deltaTime.getDeltaTime;
+    }
+
+    public get getDeltaTimeSeconds() {
+        return this.deltaTime.getDeltaTimeSeconds;
+    }
 }
