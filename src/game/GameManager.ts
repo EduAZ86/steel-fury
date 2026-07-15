@@ -1,9 +1,9 @@
 import { ArrowSpaceEnterEscKeys } from "@/engine/core/Input/ArrowSpaceEnterKeys";
-import { MapData } from "@/engine/core/Render/render";
-import { Direction, Tank, TankConfig } from "./tank";
-import { Bullet, BulletConfig } from "./bullet";
 import { Vector2D } from "@/engine/core/EntitySystem/geometry/Vector2D";
-import { tileType } from "@/engine/core/Render/types";
+import { Tank, TankConfig } from "./entities/Tank";
+import { Bullet, BulletConfig } from "./entities/Bullet";
+import { MapData } from "./maps/testMap";
+import { tileType } from "./maps/types";
 
 export interface GameConfig {
     tank: TankConfig;
@@ -83,7 +83,7 @@ export class GameManager {
         }
     }
 
-    private canTankMoveTo(x: number, y: number): boolean {
+    public canTankMoveTo(x: number, y: number): boolean {
         const half = this.config.tank.tankSize / 2;
         const ts = this.mapBounds.tileSize;
 

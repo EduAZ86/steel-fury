@@ -1,14 +1,11 @@
-import { CanvasHandler } from "./canvasHandler";
-import { SpriteRenderer } from "./spritesRender";
-import { AssetLoader } from "./AssetLoader";
-import { tileType } from "./types";
-import { Tank } from "@/engine/instancies/tank";
-import { Bullet } from "@/engine/instancies/bullet";
-
-export interface MapData {
-    tiles: tileType[][];
-    tileSize: number;
-}
+import { CanvasHandler } from "@/engine/core/Render/canvasHandler";
+import { SpriteRenderer } from "@/engine/core/Render/spritesRender";
+import { AssetLoader } from "@/engine/core/Render/AssetLoader";
+import { IRenderable } from "@/engine/core/Render/RenderSystem";
+import { Tank } from "../entities/Tank";
+import { Bullet } from "../entities/Bullet";
+import { tileType } from "../maps/types";
+import { MapData } from "../maps/testMap";
 
 const TILE_COLORS: Record<tileType, string> = {
     empty: '#1a1a2e',
@@ -19,22 +16,18 @@ const TILE_COLORS: Record<tileType, string> = {
     base: '#dc2626',
 };
 
-export class RenderSystem {
+export class GameRenderer {
     private ctx: CanvasRenderingContext2D;
     private spriteRenderer: SpriteRenderer;
     private assetLoader: AssetLoader;
-    private canvasHandler: CanvasHandler;
 
     private mapData: MapData | null = null;
     private tank: Tank | null = null;
     private bullets: Bullet[] = [];
+    private enemies: IRenderable[] = [];
+    private enemyColors: Map<string, string> = new Map();
 
-    constructor(
-        canvasHandler: CanvasHandler,
-        spriteRenderer: SpriteRenderer,
-        assetLoader: AssetLoader
-    ) {
-        this.canvasHandler = canvasHandler;
+    constructor(canvasHandler: CanvasHandler, spriteRenderer: SpriteRenderer, assetLoader: AssetLoader) {
         this.ctx = canvasHandler.context;
         this.spriteRenderer = spriteRenderer;
         this.assetLoader = assetLoader;
@@ -52,30 +45,28 @@ export class RenderSystem {
         this.bullets = bullets;
     }
 
+    public setEnemies(enemies: IRenderable[], colors?: Map<string, string>) {
+        this.enemies = enemies;
+        if (colors) this.enemyColors = colors;
+    }
+
     public drawMap = () => {
         if (!this.mapData) return;
-
         const { tiles, tileSize } = this.mapData;
 
         for (let row = 0; row < tiles.length; row++) {
             for (let col = 0; col < tiles[row].length; col++) {
                 const tile = tiles[row][col];
-                const x = col * tileSize;
-                const y = row * tileSize;
-
-                this.drawRectTile(x, y, tileSize, tile);
+                this.drawTile(col * tileSize, row * tileSize, tileSize, tile);
             }
         }
     };
 
-    private drawRectTile(x: number, y: number, size: number, tile: tileType) {
+    private drawTile(x: number, y: number, size: number, tile: tileType) {
         const baseColor = TILE_COLORS[tile];
         const half = size / 2;
 
-        this.spriteRenderer.drawRect(this.ctx, x, y, size, size, {
-            color: '#1a1a2e',
-        });
-
+        this.spriteRenderer.drawRect(this.ctx, x, y, size, size, { color: '#1a1a2e' });
         if (tile === 'empty') return;
 
         if (tile === 'brick') {
@@ -104,50 +95,40 @@ export class RenderSystem {
     public drawEntities = () => {
         this.drawBullets();
         this.drawTank();
+        this.drawEnemies();
     };
 
     private drawTank() {
         if (!this.tank) return;
-
         const pos = this.tank.position;
         const rotation = this.tank.rotation;
         const size = this.tank.gameObject.transform.scale.x;
 
         const sprite = this.assetLoader.get('playerTank');
         if (sprite) {
-            this.spriteRenderer.drawSpriteAt(this.ctx, sprite, pos.x, pos.y, {
-                rotation,
-            });
+            this.spriteRenderer.drawSpriteAt(this.ctx, sprite, pos.x, pos.y, { rotation });
         } else {
-            this.drawTankPlaceholder(pos.x, pos.y, size, rotation);
+            this.drawTankPlaceholder(pos.x, pos.y, size, rotation, '#4ade80', '#166534');
         }
     }
 
-    private drawTankPlaceholder(x: number, y: number, size: number, rotation: number) {
+    private drawTankPlaceholder(x: number, y: number, size: number, rotation: number, bodyColor: string, darkColor: string) {
         const half = size / 2;
         const barrelLength = size * 0.6;
         const barrelWidth = 4;
-        const bodyColor = '#4ade80';
-        const darkBody = '#166534';
 
         this.ctx.save();
         this.ctx.translate(x, y);
         this.ctx.rotate((rotation * Math.PI) / 180);
 
         this.spriteRenderer.drawRect(this.ctx, -half + 2, -half + 2, size - 4, size - 4, {
-            color: bodyColor,
-            strokeColor: darkBody,
-            strokeWidth: 2,
+            color: bodyColor, strokeColor: darkColor, strokeWidth: 2,
         });
-
-        this.spriteRenderer.drawRect(this.ctx, -barrelWidth / 2, -barrelLength, barrelWidth, barrelLength, {
-            color: darkBody,
-        });
-
-        this.spriteRenderer.drawRect(this.ctx, -half + 4, -half + 4, 4, 4, { color: darkBody });
-        this.spriteRenderer.drawRect(this.ctx, half - 8, -half + 4, 4, 4, { color: darkBody });
-        this.spriteRenderer.drawRect(this.ctx, -half + 4, half - 8, 4, 4, { color: darkBody });
-        this.spriteRenderer.drawRect(this.ctx, half - 8, half - 8, 4, 4, { color: darkBody });
+        this.spriteRenderer.drawRect(this.ctx, -barrelWidth / 2, -barrelLength, barrelWidth, barrelLength, { color: darkColor });
+        this.spriteRenderer.drawRect(this.ctx, -half + 4, -half + 4, 4, 4, { color: darkColor });
+        this.spriteRenderer.drawRect(this.ctx, half - 8, -half + 4, 4, 4, { color: darkColor });
+        this.spriteRenderer.drawRect(this.ctx, -half + 4, half - 8, 4, 4, { color: darkColor });
+        this.spriteRenderer.drawRect(this.ctx, half - 8, half - 8, 4, 4, { color: darkColor });
 
         this.ctx.restore();
     }
@@ -155,7 +136,6 @@ export class RenderSystem {
     private drawBullets() {
         for (const bullet of this.bullets) {
             if (!bullet.isAlive) continue;
-
             const pos = bullet.position;
             const size = bullet.gameObject.transform.scale.x;
 
@@ -164,33 +144,34 @@ export class RenderSystem {
                 this.spriteRenderer.drawSpriteAt(this.ctx, sprite, pos.x, pos.y);
             } else {
                 this.spriteRenderer.drawCircle(this.ctx, pos.x, pos.y, size / 2, {
-                    color: '#fbbf24',
-                    strokeColor: '#f59e0b',
-                    strokeWidth: 1,
+                    color: '#fbbf24', strokeColor: '#f59e0b', strokeWidth: 1,
                 });
             }
         }
     }
 
+    private drawEnemies() {
+        for (const enemy of this.enemies) {
+            const color = this.enemyColors.get(enemy.name) || '#ef4444';
+            const pos = enemy.position;
+            const rotation = enemy.rotation;
+            const size = enemy.scale.x;
+
+            this.drawTankPlaceholder(pos.x, pos.y, size, rotation, color, '#7f1d1d');
+        }
+    }
+
     public drawEntitiesState = () => {
         if (!this.tank) return;
-
         if (this.tank.health < 100) {
             const pos = this.tank.position;
             const size = this.tank.gameObject.transform.scale.x;
-            const barWidth = size;
-            const barHeight = 4;
-            const barX = pos.x - barWidth / 2;
-            const barY = pos.y - size / 2 - barHeight - 4;
-
             this.spriteRenderer.drawHealthBar(
-                this.ctx, barX, barY, barWidth, barHeight,
+                this.ctx, pos.x - size / 2, pos.y - size / 2 - 8, size, 4,
                 this.tank.health, 100
             );
         }
     };
 
-    public drawEffects = () => {
-        // placeholder para explosiones/particulas
-    };
+    public drawEffects = () => {};
 }

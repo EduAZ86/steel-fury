@@ -2,14 +2,7 @@ import { Entity } from "@/engine/core/EntitySystem/Entity";
 import { GameObject } from "@/engine/core/EntitySystem/gameObject";
 import { Vector2D } from "@/engine/core/EntitySystem/geometry/Vector2D";
 import { Transform } from "@/engine/core/EntitySystem/transform";
-import { Direction } from "./tank";
-
-const DIRECTION_VECTOR: Record<Direction, Vector2D> = {
-    up: new Vector2D(0, -1),
-    down: new Vector2D(0, 1),
-    left: new Vector2D(-1, 0),
-    right: new Vector2D(1, 0),
-};
+import { Direction, DIRECTION_VECTOR } from "./Tank";
 
 export interface BulletConfig {
     speed: number;
