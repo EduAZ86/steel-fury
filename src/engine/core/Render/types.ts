@@ -1,5 +1,3 @@
-export type tileType = 'empty' | 'brick' | 'steel' | 'water' | 'forest' | 'base';
-
 export interface DrawSpriteOptions {
     rotation?: number;
     scaleX?: number;

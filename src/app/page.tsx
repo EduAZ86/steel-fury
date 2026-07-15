@@ -1,12 +1,7 @@
 'use client'
 import { useEffect, useRef } from "react";
-import { MainLoop } from "@/engine/core/MainLoop/mainLoop";
-import { CanvasHandler } from "@/engine/core/Render/canvasHandler";
-import { SpriteRenderer } from "@/engine/core/Render/spritesRender";
-import { AssetLoader } from "@/engine/core/Render/AssetLoader";
-import { RenderSystem } from "@/engine/core/Render/render";
-import { createTestMap, getMapDimensions } from "@/engine/instancies/testMap";
-import { GameManager } from "@/engine/instancies/gameManager";
+import { MainLoop, RenderSystem, CanvasHandler, SpriteRenderer, AssetLoader } from "@/engine";
+import { GameManager, createTestMap, getMapDimensions, GameRenderer } from "@/game";
 
 export default function Home() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -27,7 +22,10 @@ export default function Home() {
     const renderSystem = new RenderSystem(canvasHandler, spriteRenderer, assetLoader);
 
     const testMap = createTestMap();
-    renderSystem.setMap(testMap);
+
+    const gameRenderer = new GameRenderer(canvasHandler, spriteRenderer, assetLoader);
+    gameRenderer.setMap(testMap);
+    renderSystem.setGameRenderer(gameRenderer);
 
     const game = new GameManager(testMap, {
       tank: {
@@ -43,7 +41,7 @@ export default function Home() {
     });
     gameRef.current = game;
 
-    renderSystem.setTank(game.tank);
+    gameRenderer.setTank(game.tank);
 
     let loop: MainLoop;
 
@@ -54,7 +52,7 @@ export default function Home() {
       },
       collisionHandler: () => {},
       updateState: () => {
-        renderSystem.setBullets(game.bullets);
+        gameRenderer.setBullets(game.bullets);
       },
       updatePysics: () => {},
       inputsHandler: () => {},

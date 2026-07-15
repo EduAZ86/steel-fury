@@ -2,7 +2,6 @@ import { Entity } from "@/engine/core/EntitySystem/Entity";
 import { GameObject } from "@/engine/core/EntitySystem/gameObject";
 import { Vector2D } from "@/engine/core/EntitySystem/geometry/Vector2D";
 import { Transform } from "@/engine/core/EntitySystem/transform";
-import { magnitudes } from "@/engine/core/EntitySystem/types";
 
 export type Direction = 'up' | 'down' | 'left' | 'right';
 
@@ -19,6 +18,8 @@ const DIRECTION_VECTOR: Record<Direction, Vector2D> = {
     left: new Vector2D(-1, 0),
     right: new Vector2D(1, 0),
 };
+
+export { DIRECTION_VECTOR };
 
 export interface TankConfig {
     speed: number;

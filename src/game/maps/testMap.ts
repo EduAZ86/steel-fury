@@ -1,5 +1,4 @@
-import { MapData } from "@/engine/core/Render/render";
-import { tileType } from "@/engine/core/Render/types";
+import { tileType } from "./types";
 
 const _: tileType = 'empty';
 const B: tileType = 'brick';
@@ -44,6 +43,11 @@ const map: tileType[][] = [
     [_,_,_,_,_,_,_,_,_,_,_,_,_,X,X,_,_,_,_,_,_,_,_,_,_,_,_],
     [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
 ];
+
+export interface MapData {
+    tiles: tileType[][];
+    tileSize: number;
+}
 
 export function createTestMap(): MapData {
     return {
