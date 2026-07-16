@@ -1,32 +1,30 @@
-import { ArrowSpaceEnterEscKeys } from "@/engine/core/Input/ArrowSpaceEnterKeys";
+import { Inputs, keys } from "@/engine";
 import { Vector2D } from "@/engine/core/EntitySystem/geometry/Vector2D";
 import { Tank, TankConfig } from "./entities/Tank";
-import { Bullet, BulletConfig } from "./entities/Bullet";
+import { Bullet, BulletConfig, BULLET_TYPES } from "./entities/Bullet";
 import { MapData } from "./maps/testMap";
-import { tileType } from "./maps/types";
+import { Cell } from "./maps/types";
 
 export interface GameConfig {
     tank: TankConfig;
     bullet: BulletConfig;
 }
 
-const DESTROYABLE_TILES: tileType[] = ['brick', 'water', 'forest'];
-const SOLID_TILES: tileType[] = ['brick', 'steel', 'water', 'base'];
-
 export class GameManager {
     public tank: Tank;
     public bullets: Bullet[] = [];
     public mapData: MapData;
+    public currentBulletType: string = 'medium';
 
-    private keys: ArrowSpaceEnterEscKeys;
+    private input: Inputs;
     private config: GameConfig;
     private mapBounds: { cols: number; rows: number; tileSize: number };
 
     constructor(mapData: MapData, config: GameConfig) {
         this.mapData = mapData;
         this.config = config;
-        this.keys = new ArrowSpaceEnterEscKeys();
-        this.keys.getKeys();
+        this.input = new Inputs(['Keyboard']);
+        this.input.startTracking();
 
         this.mapBounds = {
             cols: mapData.tiles[0].length,
@@ -46,41 +44,67 @@ export class GameManager {
     }
 
     public update(deltaTime: number) {
-        this.handleInput(deltaTime);
+        const dt = deltaTime / 1000;
+        const inputData = this.input.getDataInputs;
+        const keyState = inputData?.[0] as keys | undefined;
+        if (!keyState) return;
+
+        let rotated = false;
+        let moved = false;
+
+        if (keyState.arrowLeft) {
+            this.tank.rotate(-this.config.tank.rotationSpeed * dt);
+            rotated = true;
+        }
+        if (keyState.arrowRight) {
+            this.tank.rotate(this.config.tank.rotationSpeed * dt);
+            rotated = true;
+        }
+
+        if (keyState.arrowUp) {
+            this.tank.moveForward(dt);
+            moved = true;
+        } else if (keyState.arrowDown) {
+            this.tank.moveBackward(dt);
+            moved = true;
+        }
+
+        if (!moved) {
+            this.tank.applyFriction(dt);
+        }
+
+        const speedMod = this.getSpeedModifierAt(this.tank.position.x, this.tank.position.y);
+        this.tank.applyVelocity(dt, speedMod, (x, y) => this.canTankMoveTo(x, y));
+
         this.tank.updateShootCooldown(deltaTime);
+
+        if (keyState.space || keyState.enter) {
+            this.shoot();
+        }
+
+        if (keyState.key1) this.currentBulletType = 'light';
+        if (keyState.key2) this.currentBulletType = 'medium';
+        if (keyState.key3) this.currentBulletType = 'heavy';
+        if (keyState.key4) this.currentBulletType = 'explosive';
+
         this.updateBullets(deltaTime);
         this.checkBulletMapCollisions();
         this.checkBulletTankCollisions();
         this.cleanupBullets();
     }
 
-    private handleInput(deltaTime: number) {
-        const keyState = this.keys.keysStatus;
-        let moving = false;
+    public getSpeedModifierAt(x: number, y: number): number {
+        const col = Math.floor(x / this.mapBounds.tileSize);
+        const row = Math.floor(y / this.mapBounds.tileSize);
+        if (row < 0 || row >= this.mapBounds.rows || col < 0 || col >= this.mapBounds.cols) return 0;
+        return this.mapData.tiles[row][col].properties.speedModifier;
+    }
 
-        const canMove = (x: number, y: number) => this.canTankMoveTo(x, y);
-
-        if (keyState.arrowUp) {
-            this.tank.move('up', deltaTime, canMove);
-            moving = true;
-        } else if (keyState.arrowDown) {
-            this.tank.move('down', deltaTime, canMove);
-            moving = true;
-        } else if (keyState.arrowLeft) {
-            this.tank.move('left', deltaTime, canMove);
-            moving = true;
-        } else if (keyState.arrowRight) {
-            this.tank.move('right', deltaTime, canMove);
-            moving = true;
-        }
-
-        if (!moving) {
-            this.tank.stopMoving();
-        }
-
-        if (keyState.space || keyState.enter) {
-            this.shoot();
-        }
+    public getCellAt(x: number, y: number): Cell | null {
+        const col = Math.floor(x / this.mapBounds.tileSize);
+        const row = Math.floor(y / this.mapBounds.tileSize);
+        if (row < 0 || row >= this.mapBounds.rows || col < 0 || col >= this.mapBounds.cols) return null;
+        return this.mapData.tiles[row][col];
     }
 
     public canTankMoveTo(x: number, y: number): boolean {
@@ -97,8 +121,8 @@ export class GameManager {
                 if (row < 0 || row >= this.mapBounds.rows || col < 0 || col >= this.mapBounds.cols) {
                     return false;
                 }
-                const tile = this.mapData.tiles[row][col];
-                if (SOLID_TILES.includes(tile)) {
+                const cell = this.mapData.tiles[row][col];
+                if (cell.properties.isObstacle) {
                     return false;
                 }
             }
@@ -107,13 +131,14 @@ export class GameManager {
     }
 
     private shoot() {
-        const bulletInfo = this.tank.tryShoot();
+        const bulletConfig = BULLET_TYPES[this.currentBulletType] || this.config.bullet;
+        const bulletInfo = this.tank.tryShoot(bulletConfig.size);
         if (!bulletInfo) return;
 
         const bullet = new Bullet(
             new Vector2D(bulletInfo.x, bulletInfo.y),
-            bulletInfo.direction,
-            this.config.bullet,
+            bulletInfo.angle,
+            bulletConfig,
             this.mapBounds
         );
 
@@ -139,28 +164,40 @@ export class GameManager {
                 continue;
             }
 
-            const tile = this.mapData.tiles[tileY][tileX];
+            const cell = this.mapData.tiles[tileY][tileX];
 
-            if (tile === 'base') {
+            if (cell.properties.passThrough) continue;
+
+            if (cell.properties.hardness === -1) {
                 bullet.destroy();
                 continue;
             }
 
-            if (DESTROYABLE_TILES.includes(tile)) {
-                this.destroyTile(tileX, tileY);
+            if (cell.properties.hardness > 0) {
+                cell.properties.hardness -= bullet.damage;
+                if (cell.properties.hardness <= 0) {
+                    this.destroyTile(tileX, tileY);
+                }
                 bullet.destroy();
                 continue;
             }
 
-            if (tile === 'steel') {
-                bullet.destroy();
-                continue;
-            }
+            bullet.destroy();
         }
     }
 
     private destroyTile(x: number, y: number) {
-        this.mapData.tiles[y][x] = 'empty';
+        this.mapData.tiles[y][x] = {
+            type: 'empty',
+            properties: {
+                color: '#1a1a2e',
+                hardness: 0,
+                speedModifier: 1.0,
+                passThrough: true,
+                isObstacle: false,
+                isGround: false,
+            },
+        };
 
         const neighbors = [
             [x - 1, y], [x + 1, y], [x, y - 1], [x, y + 1],
@@ -169,8 +206,18 @@ export class GameManager {
         for (const [nx, ny] of neighbors) {
             if (nx >= 0 && nx < this.mapBounds.cols && ny >= 0 && ny < this.mapBounds.rows) {
                 const neighbor = this.mapData.tiles[ny][nx];
-                if (neighbor === 'water' || neighbor === 'forest') {
-                    this.mapData.tiles[ny][nx] = 'empty';
+                if (neighbor.type === 'water' || neighbor.type === 'forest') {
+                    this.mapData.tiles[ny][nx] = {
+                        type: 'empty',
+                        properties: {
+                            color: '#1a1a2e',
+                            hardness: 0,
+                            speedModifier: 1.0,
+                            passThrough: true,
+                            isObstacle: false,
+                            isGround: false,
+                        },
+                    };
                 }
             }
         }
@@ -182,7 +229,7 @@ export class GameManager {
 
             const bx = bullet.position.x;
             const by = bullet.position.y;
-            const bSize = this.config.bullet.size;
+            const bSize = bullet.config.size;
 
             const tx = this.tank.position.x;
             const ty = this.tank.position.y;
@@ -200,6 +247,6 @@ export class GameManager {
     }
 
     public destroy() {
-        this.keys.stopTracking();
+        this.input.stopTracking();
     }
 }

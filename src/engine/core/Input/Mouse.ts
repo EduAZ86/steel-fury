@@ -4,7 +4,8 @@ export class MouseInput {
     private _mousePosition: Vector2D;
     private _isTracking: boolean;
     private _handleMouseMove: (event: MouseEvent) => void;
-    private _handleMouseClick: (event: MouseEvent) => void;
+    private _handleMouseDown: (event: MouseEvent) => void;
+    private _handleMouseUp: (event: MouseEvent) => void;
     private _handleMouseScroll: (event: WheelEvent) => void;
     public leftClick: boolean;
     public rightClick: boolean;
@@ -13,7 +14,8 @@ export class MouseInput {
         this._mousePosition = new Vector2D(0, 0);
         this._isTracking = false;
         this._handleMouseMove = this.updateMousePosition.bind(this);
-        this._handleMouseClick = this.updateMouseClick.bind(this);
+        this._handleMouseDown = this.handleMouseDown.bind(this);
+        this._handleMouseUp = this.handleMouseUp.bind(this);
         this._handleMouseScroll = this.updateMouseScroll.bind(this);
         this.leftClick = false;
         this.rightClick = false;
@@ -24,11 +26,19 @@ export class MouseInput {
         return this._mousePosition;
     }
 
-    private updateMouseClick(event: MouseEvent): void {
+    private handleMouseDown = (event: MouseEvent): void => {
         if (event.button === 0) {
             this.leftClick = true;
         } else if (event.button === 2) {
             this.rightClick = true;
+        }
+    }
+
+    private handleMouseUp = (event: MouseEvent): void => {
+        if (event.button === 0) {
+            this.leftClick = false;
+        } else if (event.button === 2) {
+            this.rightClick = false;
         }
     }
 
@@ -40,7 +50,8 @@ export class MouseInput {
         if (!this._isTracking) {
             document.addEventListener('mousemove', this._handleMouseMove);
             document.addEventListener('wheel', this._handleMouseScroll);
-            document.addEventListener('click', this._handleMouseClick)
+            document.addEventListener('mousedown', this._handleMouseDown);
+            document.addEventListener('mouseup', this._handleMouseUp);
             this._isTracking = true;
         }
     }
@@ -49,7 +60,8 @@ export class MouseInput {
         if (this._isTracking) {
             document.removeEventListener('mousemove', this._handleMouseMove);
             document.removeEventListener('wheel', this._handleMouseScroll);
-            document.removeEventListener('click', this._handleMouseClick)
+            document.removeEventListener('mousedown', this._handleMouseDown);
+            document.removeEventListener('mouseup', this._handleMouseUp);
             this._isTracking = false;
         }
     }

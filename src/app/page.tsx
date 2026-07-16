@@ -29,9 +29,13 @@ export default function Home() {
 
     const game = new GameManager(testMap, {
       tank: {
-        speed: 150,
+        maxSpeed: 150,
+        acceleration: 400,
+        deceleration: 3,
+        rotationSpeed: 180,
         tileSize: mapDims.tileSize,
         tankSize: mapDims.tileSize - 4,
+        health: 100,
       },
       bullet: {
         speed: 300,

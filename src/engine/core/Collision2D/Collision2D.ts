@@ -10,30 +10,30 @@ export class Collision2D {
     }
     public onCollision() {
         const collisions: collisionFace[] = []
-        //left
-        if (this.localShape.vertices.bL.x >= this.colliderShape.vertices.bR.x &&
-            this.colliderShape.vertices.tR.y > this.localShape.vertices.bL.y ||
-            this.localShape.vertices.bL.y > this.colliderShape.vertices.tR.y) {
-            collisions.push('left');
+        const local = this.localShape;
+        const other = this.colliderShape;
+
+        const overlapX = local.position.x < other.position.x + other.size.x &&
+                         local.position.x + local.size.x > other.position.x;
+        const overlapY = local.position.y < other.position.y + other.size.y &&
+                         local.position.y + local.size.y > other.position.y;
+
+        if (!overlapX || !overlapY) return collisions;
+
+        const localCenterX = local.position.x + local.size.x / 2;
+        const localCenterY = local.position.y + local.size.y / 2;
+        const otherCenterX = other.position.x + other.size.x / 2;
+        const otherCenterY = other.position.y + other.size.y / 2;
+
+        const dx = localCenterX - otherCenterX;
+        const dy = localCenterY - otherCenterY;
+
+        if (Math.abs(dx) > Math.abs(dy)) {
+            collisions.push(dx > 0 ? 'right' : 'left');
+        } else {
+            collisions.push(dy > 0 ? 'bottom' : 'top');
         }
-        //right
-        if (this.localShape.vertices.bR.x <= this.colliderShape.vertices.bL.x &&
-            this.colliderShape.vertices.tL.y > this.localShape.vertices.bR.y ||
-            this.localShape.vertices.bR.y > this.colliderShape.vertices.tL.y) {
-            collisions.push('right');
-        }
-        //top
-        if (this.localShape.vertices.tR.y >= this.colliderShape.vertices.bR.y &&
-            this.colliderShape.vertices.bR.x > this.localShape.position.x ||
-            this.localShape.vertices.tL.x > this.colliderShape.vertices.bR.x) {
-            collisions.push('top')
-        }
-        //bottom
-        if (this.localShape.vertices.bL.y >= this.colliderShape.vertices.tL.y &&
-            this.colliderShape.vertices.tR.x > this.localShape.vertices.bL.x ||
-            this.localShape.vertices.bL.x > this.colliderShape.vertices.tR.x) {
-            collisions.push('bottom')
-        }
+
         return collisions
     }
 

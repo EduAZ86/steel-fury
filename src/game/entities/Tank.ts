@@ -3,38 +3,26 @@ import { GameObject } from "@/engine/core/EntitySystem/gameObject";
 import { Vector2D } from "@/engine/core/EntitySystem/geometry/Vector2D";
 import { Transform } from "@/engine/core/EntitySystem/transform";
 
-export type Direction = 'up' | 'down' | 'left' | 'right';
-
-const DIRECTION_ROTATION: Record<Direction, number> = {
-    up: 0,
-    right: 90,
-    down: 180,
-    left: 270,
-};
-
-const DIRECTION_VECTOR: Record<Direction, Vector2D> = {
-    up: new Vector2D(0, -1),
-    down: new Vector2D(0, 1),
-    left: new Vector2D(-1, 0),
-    right: new Vector2D(1, 0),
-};
-
-export { DIRECTION_VECTOR };
-
 export interface TankConfig {
-    speed: number;
+    maxSpeed: number;
+    acceleration: number;
+    deceleration: number;
+    rotationSpeed: number;
     tileSize: number;
     tankSize: number;
+    health: number;
 }
 
 export class Tank extends Entity {
-    public direction: Direction = 'up';
-    public isMoving: boolean = false;
+    public velocity: Vector2D = Vector2D.Zero;
     public canShoot: boolean = true;
     public shootCooldown: number = 0;
     public shootCooldownMax: number = 200;
 
-    private speed: number;
+    private maxSpeed: number;
+    private acceleration: number;
+    private deceleration: number;
+    private rotationSpeed: number;
     private tileSize: number;
     private tankSize: number;
     private mapBounds: { cols: number; rows: number };
@@ -48,60 +36,114 @@ export class Tank extends Entity {
         const gameObject = new GameObject(
             name,
             new Transform(position, 0, new Vector2D(config.tankSize, config.tankSize)),
-            { velocity: new Vector2D(0, 0), acceleration: new Vector2D(0, 0), angularVelocity: 0, mass: 1 },
+            { velocity: Vector2D.Zero, acceleration: Vector2D.Zero, angularVelocity: 0, mass: 1 },
             'dynamic'
         );
 
-        super(name, 'dynamic', 100, gameObject.rigidBody.magnitudes, gameObject);
+        super(name, 'dynamic', config.health, gameObject);
 
-        this.speed = config.speed;
+        this.maxSpeed = config.maxSpeed;
+        this.acceleration = config.acceleration;
+        this.deceleration = config.deceleration;
+        this.rotationSpeed = config.rotationSpeed;
         this.tileSize = config.tileSize;
         this.tankSize = config.tankSize;
         this.mapBounds = mapBounds;
     }
 
-    public move(direction: Direction, deltaTime: number, canMoveTo?: (x: number, y: number) => boolean) {
-        this.direction = direction;
-        this.isMoving = true;
+    public rotate(angleDelta: number) {
+        const current = this.gameObject.transform.rotation;
+        this.gameObject.transform.updateRotation(current + angleDelta);
+    }
 
-        const targetRotation = DIRECTION_ROTATION[direction];
-        this.gameObject.transform.updateRotation(targetRotation);
+    public moveForward(dt: number) {
+        const rad = (this.gameObject.transform.rotation - 90) * (Math.PI / 180);
+        const dir = new Vector2D(Math.cos(rad), Math.sin(rad));
+        this.velocity = this.velocity.Sum(dir.Multiply(this.acceleration * dt));
+        if (this.velocity.magnitude > this.maxSpeed) {
+            this.velocity = this.velocity.normalized.Multiply(this.maxSpeed);
+        }
+    }
 
-        const dir = DIRECTION_VECTOR[direction];
-        const moveAmount = this.speed * (deltaTime / 1000);
+    public moveBackward(dt: number) {
+        const rad = (this.gameObject.transform.rotation - 90) * (Math.PI / 180);
+        const dir = new Vector2D(Math.cos(rad), Math.sin(rad));
+        this.velocity = this.velocity.Substract(dir.Multiply(this.acceleration * dt));
+        if (this.velocity.magnitude > this.maxSpeed * 0.5) {
+            this.velocity = this.velocity.normalized.Multiply(this.maxSpeed * 0.5);
+        }
+    }
 
-        const newX = this.gameObject.transform.position.x + dir.x * moveAmount;
-        const newY = this.gameObject.transform.position.y + dir.y * moveAmount;
+    public applyFriction(dt: number) {
+        const friction = 1 - this.deceleration * dt;
+        this.velocity = this.velocity.Multiply(Math.max(0, friction));
+        if (this.velocity.magnitude < 0.5) {
+            this.velocity = Vector2D.Zero;
+        }
+    }
 
+    public applyVelocity(dt: number, speedModifier: number, canMoveTo?: (x: number, y: number) => boolean) {
+        const effectiveVelocity = this.velocity.Multiply(speedModifier);
         const halfSize = this.tankSize / 2;
-        const clampedX = Math.max(halfSize, Math.min(this.mapBounds.cols * this.tileSize - halfSize, newX));
-        const clampedY = Math.max(halfSize, Math.min(this.mapBounds.rows * this.tileSize - halfSize, newY));
+        const maxCol = this.mapBounds.cols * this.tileSize;
+        const maxRow = this.mapBounds.rows * this.tileSize;
 
-        if (canMoveTo && !canMoveTo(clampedX, clampedY)) return;
+        let newX = this.gameObject.transform.position.x + effectiveVelocity.x * dt;
+        let newY = this.gameObject.transform.position.y + effectiveVelocity.y * dt;
 
-        this.gameObject.transform.updatePosition({ x: clampedX, y: clampedY });
+        newX = Math.max(halfSize, Math.min(maxCol - halfSize, newX));
+        newY = Math.max(halfSize, Math.min(maxRow - halfSize, newY));
+
+        if (canMoveTo) {
+            const okX = canMoveTo(newX, this.gameObject.transform.position.y);
+            const okY = canMoveTo(okX ? newX : this.gameObject.transform.position.x, newY);
+
+            if (okX) {
+                this.gameObject.transform.updatePosition({ x: newX, y: this.gameObject.transform.position.y });
+            }
+            if (okY) {
+                const cur = this.gameObject.transform.position;
+                this.gameObject.transform.updatePosition({ x: cur.x, y: newY });
+            }
+            if (!okX && !okY) {
+                // Try each axis independently for wall sliding
+                const curX = this.gameObject.transform.position.x;
+                const curY = this.gameObject.transform.position.y;
+                if (canMoveTo(newX, curY)) {
+                    this.gameObject.transform.updatePosition({ x: newX, y: curY });
+                }
+                if (canMoveTo(this.gameObject.transform.position.x, newY)) {
+                    this.gameObject.transform.updatePosition({ x: this.gameObject.transform.position.x, y: newY });
+                }
+            }
+        } else {
+            this.gameObject.transform.updatePosition({ x: newX, y: newY });
+        }
     }
 
-    public stopMoving() {
-        this.isMoving = false;
-    }
+   public tryShoot(bulletSize: number = 6): { x: number; y: number; angle: number } | null {
+    if (!this.canShoot) return null;
 
-    public tryShoot(): { x: number; y: number; direction: Direction } | null {
-        if (!this.canShoot) return null;
+    this.canShoot = false;
+    this.shootCooldown = this.shootCooldownMax;
 
-        this.canShoot = false;
-        this.shootCooldown = this.shootCooldownMax;
+    const rotation = this.gameObject.transform.rotation;
+    const rad = (rotation - 90) * (Math.PI / 180);
 
-        const pos = this.gameObject.transform.position;
-        const dir = DIRECTION_VECTOR[this.direction];
-        const offset = this.tankSize / 2 + 2;
+    const dir = new Vector2D(Math.cos(rad), Math.sin(rad));
 
-        return {
-            x: pos.x + dir.x * offset,
-            y: pos.y + dir.y * offset,
-            direction: this.direction,
-        };
-    }
+    const halfDiagonal = this.tankSize / Math.sqrt(2);
+    const bulletRadius = bulletSize / 2;
+    const safetyMargin = 1;
+
+    const offset = halfDiagonal + bulletRadius + safetyMargin;
+
+    return {
+        x: this.gameObject.transform.position.x + dir.x * offset,
+        y: this.gameObject.transform.position.y + dir.y * offset,
+        angle: rotation,
+    };
+}
 
     public updateShootCooldown(deltaTime: number) {
         if (!this.canShoot) {

@@ -4,17 +4,8 @@ import { AssetLoader } from "@/engine/core/Render/AssetLoader";
 import { IRenderable } from "@/engine/core/Render/RenderSystem";
 import { Tank } from "../entities/Tank";
 import { Bullet } from "../entities/Bullet";
-import { tileType } from "../maps/types";
+import { Cell } from "../maps/types";
 import { MapData } from "../maps/testMap";
-
-const TILE_COLORS: Record<tileType, string> = {
-    empty: '#1a1a2e',
-    brick: '#b45309',
-    steel: '#9ca3af',
-    water: '#3b82f6',
-    forest: '#166534',
-    base: '#dc2626',
-};
 
 export class GameRenderer {
     private ctx: CanvasRenderingContext2D;
@@ -26,6 +17,8 @@ export class GameRenderer {
     private bullets: Bullet[] = [];
     private enemies: IRenderable[] = [];
     private enemyColors: Map<string, string> = new Map();
+
+    private frame: number = 0;
 
     constructor(canvasHandler: CanvasHandler, spriteRenderer: SpriteRenderer, assetLoader: AssetLoader) {
         this.ctx = canvasHandler.context;
@@ -50,45 +43,54 @@ export class GameRenderer {
         if (colors) this.enemyColors = colors;
     }
 
+    public incrementFrame() {
+        this.frame++;
+    }
+
     public drawMap = () => {
         if (!this.mapData) return;
         const { tiles, tileSize } = this.mapData;
 
         for (let row = 0; row < tiles.length; row++) {
             for (let col = 0; col < tiles[row].length; col++) {
-                const tile = tiles[row][col];
-                this.drawTile(col * tileSize, row * tileSize, tileSize, tile);
+                const cell = tiles[row][col];
+                this.drawTile(col * tileSize, row * tileSize, tileSize, cell);
             }
         }
     };
 
-    private drawTile(x: number, y: number, size: number, tile: tileType) {
-        const baseColor = TILE_COLORS[tile];
+    private drawTile(x: number, y: number, size: number, cell: Cell) {
+        const color = cell.properties.color;
         const half = size / 2;
 
-        this.spriteRenderer.drawRect(this.ctx, x, y, size, size, { color: '#1a1a2e' });
-        if (tile === 'empty') return;
+        if (cell.type === 'empty') {
+            this.spriteRenderer.drawRect(this.ctx, x, y, size, size, { color });
+            return;
+        }
 
-        if (tile === 'brick') {
-            this.spriteRenderer.drawRect(this.ctx, x, y, size, size, { color: baseColor });
+        if (cell.type === 'brick') {
+            this.spriteRenderer.drawRect(this.ctx, x, y, size, size, { color });
             this.spriteRenderer.drawRect(this.ctx, x + 2, y + 2, half - 3, half - 3, { color: '#92400e' });
             this.spriteRenderer.drawRect(this.ctx, x + half + 1, y + 2, half - 3, half - 3, { color: '#92400e' });
             this.spriteRenderer.drawRect(this.ctx, x + 2, y + half + 1, half - 3, half - 3, { color: '#92400e' });
             this.spriteRenderer.drawRect(this.ctx, x + half + 1, y + half + 1, half - 3, half - 3, { color: '#92400e' });
-        } else if (tile === 'steel') {
-            this.spriteRenderer.drawRect(this.ctx, x, y, size, size, { color: baseColor, strokeColor: '#6b7280', strokeWidth: 1 });
+        } else if (cell.type === 'steel') {
+            this.spriteRenderer.drawRect(this.ctx, x, y, size, size, { color, strokeColor: '#6b7280', strokeWidth: 1 });
             this.spriteRenderer.drawRect(this.ctx, x + 4, y + 4, size - 8, size - 8, { color: '#d1d5db' });
-        } else if (tile === 'water') {
+        } else if (cell.type === 'water') {
             this.spriteRenderer.drawRect(this.ctx, x, y, size, size, { color: '#1e40af' });
-            this.spriteRenderer.drawRect(this.ctx, x + 2, y + size / 3, size - 4, 3, { color: '#60a5fa', alpha: 0.7 });
-            this.spriteRenderer.drawRect(this.ctx, x + 6, y + size * 2 / 3, size - 12, 2, { color: '#93c5fd', alpha: 0.5 });
-        } else if (tile === 'forest') {
+            const waveOffset = Math.sin(this.frame * 0.08 + x * 0.05) * 2;
+            this.spriteRenderer.drawRect(this.ctx, x + 2, y + size / 3 + waveOffset, size - 4, 3, { color: '#60a5fa', alpha: 0.7 });
+            this.spriteRenderer.drawRect(this.ctx, x + 6, y + size * 2 / 3 - waveOffset, size - 12, 2, { color: '#93c5fd', alpha: 0.5 });
+        } else if (cell.type === 'forest') {
             this.spriteRenderer.drawRect(this.ctx, x, y, size, size, { color: '#1a1a2e' });
-            this.spriteRenderer.drawRect(this.ctx, x + 2, y + 2, size - 4, size - 4, { color: baseColor });
+            this.spriteRenderer.drawRect(this.ctx, x + 2, y + 2, size - 4, size - 4, { color: '#166534' });
             this.spriteRenderer.drawCircle(this.ctx, x + half, y + half, half - 4, { color: '#22c55e', alpha: 0.6 });
-        } else if (tile === 'base') {
+        } else if (cell.type === 'base') {
             this.spriteRenderer.drawRect(this.ctx, x, y, size, size, { color: '#7f1d1d', strokeColor: '#dc2626', strokeWidth: 2 });
             this.spriteRenderer.drawCircle(this.ctx, x + half, y + half, half / 2, { color: '#fbbf24' });
+        } else {
+            this.spriteRenderer.drawRect(this.ctx, x, y, size, size, { color });
         }
     }
 
@@ -137,7 +139,7 @@ export class GameRenderer {
         for (const bullet of this.bullets) {
             if (!bullet.isAlive) continue;
             const pos = bullet.position;
-            const size = bullet.gameObject.transform.scale.x;
+            const size = bullet.config.size;
 
             const sprite = this.assetLoader.get('bullet');
             if (sprite) {

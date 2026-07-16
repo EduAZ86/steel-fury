@@ -1,57 +1,65 @@
-import { tileType } from "./types";
-
-const _: tileType = 'empty';
-const B: tileType = 'brick';
-const S: tileType = 'steel';
-const W: tileType = 'water';
-const F: tileType = 'forest';
-const X: tileType = 'base';
+import { Cell, CellMap } from "./types";
 
 const TILE_SIZE = 32;
 
-const map: tileType[][] = [
-    [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
-    [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
-    [_,_,B,B,_,_,B,B,_,_,B,B,_,_,B,B,_,_,B,B,_,_,B,B,_,_,_],
-    [_,_,B,B,_,_,B,B,_,_,B,B,_,_,B,B,_,_,B,B,_,_,B,B,_,_,_],
-    [_,_,B,B,_,_,B,B,_,_,B,B,_,_,B,B,_,_,B,B,_,_,B,B,_,_,_],
-    [_,_,B,B,_,_,B,B,_,_,B,B,_,_,B,B,_,_,B,B,_,_,B,B,_,_,_],
-    [_,_,B,B,_,_,B,B,_,_,B,B,S,S,B,B,_,_,B,B,_,_,B,B,_,_,_],
-    [_,_,B,B,_,_,B,B,_,_,B,B,S,S,B,B,_,_,B,B,_,_,B,B,_,_,_],
-    [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
-    [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
-    [_,_,B,B,_,_,_,_,_,_,B,B,_,_,B,B,_,_,_,_,_,_,B,B,_,_,_],
-    [_,_,B,B,_,_,_,_,_,_,B,B,_,_,B,B,_,_,_,_,_,_,B,B,_,_,_],
-    [_,_,B,B,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,B,B,_,_,_],
-    [_,_,B,B,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,B,B,_,_,_],
-    [_,_,_,_,_,_,B,B,_,_,_,_,_,_,_,_,_,_,B,B,_,_,_,_,_,_,_],
-    [_,_,_,_,_,_,B,B,_,_,_,_,_,_,_,_,_,_,B,B,_,_,_,_,_,_,_],
-    [_,_,B,B,_,_,B,B,_,_,_,_,F,F,_,_,_,_,B,B,_,_,B,B,_,_,_],
-    [_,_,B,B,_,_,B,B,_,_,_,_,F,F,_,_,_,_,B,B,_,_,B,B,_,_,_],
-    [_,_,B,B,_,_,B,B,_,_,_,_,F,F,_,_,_,_,B,B,_,_,B,B,_,_,_],
-    [_,_,B,B,_,_,B,B,_,_,_,_,F,F,_,_,_,_,B,B,_,_,B,B,_,_,_],
-    [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
-    [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
-    [_,_,B,B,_,_,B,B,_,_,W,W,_,_,W,W,_,_,B,B,_,_,B,B,_,_,_],
-    [_,_,B,B,_,_,B,B,_,_,W,W,_,_,W,W,_,_,B,B,_,_,B,B,_,_,_],
-    [_,_,B,B,_,_,B,B,_,_,W,W,_,_,W,W,_,_,B,B,_,_,B,B,_,_,_],
-    [_,_,B,B,_,_,B,B,_,_,W,W,_,_,W,W,_,_,B,B,_,_,B,B,_,_,_],
-    [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
-    [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
-    [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
-    [_,_,_,_,_,_,_,_,_,_,_,_,_,X,X,_,_,_,_,_,_,_,_,_,_,_,_],
-    [_,_,_,_,_,_,_,_,_,_,_,_,_,X,X,_,_,_,_,_,_,_,_,_,_,_,_],
-    [_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_],
+function cell(type: string, color: string, hardness: number, speedModifier: number, passThrough: boolean, isObstacle: boolean, isGround: boolean): Cell {
+    return { type, properties: { color, hardness, speedModifier, passThrough, isObstacle, isGround } };
+}
+
+const E: Cell = cell('empty', '#1a1a2e', 0, 1.0, true, false, false);
+const B: Cell = cell('brick', '#b45309', 2, 0.0, false, true, false);
+const S: Cell = cell('steel', '#9ca3af', -1, 0.0, false, true, false);
+const W: Cell = cell('water', '#3b82f6', 1, 0.4, true, false, true);
+const F: Cell = cell('forest', '#166534', 1, 0.7, true, false, true);
+const X: Cell = cell('base', '#dc2626', -1, 0.0, false, true, false);
+
+const map: CellMap = [
+    [E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E],
+    [E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E],
+    [E,E,B,B,E,E,B,B,E,E,B,B,E,E,B,B,E,E,B,B,E,E,B,B,E,E,E],
+    [E,E,B,B,E,E,B,B,E,E,B,B,E,E,B,B,E,E,B,B,E,E,B,B,E,E,E],
+    [E,E,B,B,E,E,B,B,E,E,B,B,E,E,B,B,E,E,B,B,E,E,B,B,E,E,E],
+    [E,E,B,B,E,E,B,B,E,E,B,B,E,E,B,B,E,E,B,B,E,E,B,B,E,E,E],
+    [E,E,B,B,E,E,B,B,E,E,B,B,S,S,B,B,E,E,B,B,E,E,B,B,E,E,E],
+    [E,E,B,B,E,E,B,B,E,E,B,B,S,S,B,B,E,E,B,B,E,E,B,B,E,E,E],
+    [E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E],
+    [E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E],
+    [E,E,B,B,E,E,E,E,E,E,B,B,E,E,B,B,E,E,E,E,E,E,B,B,E,E,E],
+    [E,E,B,B,E,E,E,E,E,E,B,B,E,E,B,B,E,E,E,E,E,E,B,B,E,E,E],
+    [E,E,B,B,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,B,B,E,E,E],
+    [E,E,B,B,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,B,B,E,E,E],
+    [E,E,E,E,E,E,B,B,E,E,E,E,E,E,E,E,E,E,B,B,E,E,E,E,E,E,E],
+    [E,E,E,E,E,E,B,B,E,E,E,E,E,E,E,E,E,E,B,B,E,E,E,E,E,E,E],
+    [E,E,B,B,E,E,B,B,E,E,E,E,F,F,E,E,E,E,B,B,E,E,B,B,E,E,E],
+    [E,E,B,B,E,E,B,B,E,E,E,E,F,F,E,E,E,E,B,B,E,E,B,B,E,E,E],
+    [E,E,B,B,E,E,B,B,E,E,E,E,F,F,E,E,E,E,B,B,E,E,B,B,E,E,E],
+    [E,E,B,B,E,E,B,B,E,E,E,E,F,F,E,E,E,E,B,B,E,E,B,B,E,E,E],
+    [E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E],
+    [E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E],
+    [E,E,B,B,E,E,B,B,E,E,W,W,E,E,W,W,E,E,B,B,E,E,B,B,E,E,E],
+    [E,E,B,B,E,E,B,B,E,E,W,W,E,E,W,W,E,E,B,B,E,E,B,B,E,E,E],
+    [E,E,B,B,E,E,B,B,E,E,W,W,E,E,W,W,E,E,B,B,E,E,B,B,E,E,E],
+    [E,E,B,B,E,E,B,B,E,E,W,W,E,E,W,W,E,E,B,B,E,E,B,B,E,E,E],
+    [E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E],
+    [E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E],
+    [E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E],
+    [E,E,E,E,E,E,E,E,E,E,E,E,X,X,E,E,E,E,E,E,E,E,E,E,E,E,E],
+    [E,E,E,E,E,E,E,E,E,E,E,E,X,X,E,E,E,E,E,E,E,E,E,E,E,E,E],
+    [E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E,E],
 ];
 
 export interface MapData {
-    tiles: tileType[][];
+    tiles: CellMap;
     tileSize: number;
 }
 
 export function createTestMap(): MapData {
+    const clonedTiles = map.map(row => row.map(cell => ({
+        type: cell.type,
+        properties: { ...cell.properties }
+    })));
     return {
-        tiles: map,
+        tiles: clonedTiles,
         tileSize: TILE_SIZE,
     };
 }

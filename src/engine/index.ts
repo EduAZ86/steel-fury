@@ -22,6 +22,7 @@ export type { DrawSpriteOptions, DrawRectOptions, DrawTextOptions, DrawCircleOpt
 
 export { Inputs } from './core/Input/Input';
 export { ArrowSpaceEnterEscKeys } from './core/Input/ArrowSpaceEnterKeys';
+export type { keys } from './core/Input/ArrowSpaceEnterKeys';
 export { MouseInput } from './core/Input/Mouse';
 export type { InputsDevice } from './core/Input/types';
 
