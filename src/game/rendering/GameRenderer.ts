@@ -1,9 +1,9 @@
 import { CanvasHandler } from "@/engine/core/Render/canvasHandler";
 import { SpriteRenderer } from "@/engine/core/Render/spritesRender";
 import { AssetLoader } from "@/engine/core/Render/AssetLoader";
-import { IRenderable } from "@/engine/core/Render/RenderSystem";
 import { Tank } from "../entities/Tank";
 import { Bullet } from "../entities/Bullet";
+import { Enemy } from "../entities/Enemy";
 import { Cell } from "../maps/types";
 import { MapData } from "../maps/testMap";
 
@@ -15,8 +15,7 @@ export class GameRenderer {
     private mapData: MapData | null = null;
     private tank: Tank | null = null;
     private bullets: Bullet[] = [];
-    private enemies: IRenderable[] = [];
-    private enemyColors: Map<string, string> = new Map();
+    private enemies: Enemy[] = [];
 
     private frame: number = 0;
 
@@ -38,9 +37,8 @@ export class GameRenderer {
         this.bullets = bullets;
     }
 
-    public setEnemies(enemies: IRenderable[], colors?: Map<string, string>) {
+    public setEnemies(enemies: Enemy[]) {
         this.enemies = enemies;
-        if (colors) this.enemyColors = colors;
     }
 
     public incrementFrame() {
@@ -154,12 +152,19 @@ export class GameRenderer {
 
     private drawEnemies() {
         for (const enemy of this.enemies) {
-            const color = this.enemyColors.get(enemy.name) || '#ef4444';
+            if (!enemy.isAlive) continue;
             const pos = enemy.position;
             const rotation = enemy.rotation;
-            const size = enemy.scale.x;
+            const size = enemy.config.size;
 
-            this.drawTankPlaceholder(pos.x, pos.y, size, rotation, color, '#7f1d1d');
+            this.drawTankPlaceholder(pos.x, pos.y, size, rotation, enemy.config.color, enemy.config.darkColor);
+
+            if (enemy.health < enemy.config.health) {
+                this.spriteRenderer.drawHealthBar(
+                    this.ctx, pos.x - size / 2, pos.y - size / 2 - 8, size, 4,
+                    enemy.health, enemy.config.health
+                );
+            }
         }
     }
 

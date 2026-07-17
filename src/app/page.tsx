@@ -42,6 +42,10 @@ export default function Home() {
         size: 6,
         damage: 50,
       },
+      enemies: {
+        maxCount: 8,
+        spawnInterval: 3000,
+      },
     });
     gameRef.current = game;
 
@@ -57,6 +61,7 @@ export default function Home() {
       collisionHandler: () => {},
       updateState: () => {
         gameRenderer.setBullets(game.bullets);
+        gameRenderer.setEnemies(game.enemies);
       },
       updatePhysics: () => {},
       inputsHandler: () => {},

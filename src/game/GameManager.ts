@@ -2,23 +2,31 @@ import { Inputs, keys } from "@/engine";
 import { Vector2D } from "@/engine/core/EntitySystem/geometry/Vector2D";
 import { Tank, TankConfig } from "./entities/Tank";
 import { Bullet, BulletConfig, BULLET_TYPES } from "./entities/Bullet";
+import { Enemy, EnemyClass, ENEMY_CONFIGS } from "./entities/Enemy";
 import { MapData } from "./maps/testMap";
 import { Cell } from "./maps/types";
 
 export interface GameConfig {
     tank: TankConfig;
     bullet: BulletConfig;
+    enemies: {
+        maxCount: number;
+        spawnInterval: number;
+    };
 }
 
 export class GameManager {
     public tank: Tank;
     public bullets: Bullet[] = [];
+    public enemies: Enemy[] = [];
     public mapData: MapData;
     public currentBulletType: string = 'medium';
 
     private input: Inputs;
     private config: GameConfig;
     private mapBounds: { cols: number; rows: number; tileSize: number };
+    private spawnTimer: number = 0;
+    private enemyClasses: EnemyClass[] = ['scout', 'grunt', 'heavy', 'artillery', 'commander'];
 
     constructor(mapData: MapData, config: GameConfig) {
         this.mapData = mapData;
@@ -49,16 +57,13 @@ export class GameManager {
         const keyState = inputData?.[0] as keys | undefined;
         if (!keyState) return;
 
-        let rotated = false;
         let moved = false;
 
         if (keyState.arrowLeft) {
             this.tank.rotate(-this.config.tank.rotationSpeed * dt);
-            rotated = true;
         }
         if (keyState.arrowRight) {
             this.tank.rotate(this.config.tank.rotationSpeed * dt);
-            rotated = true;
         }
 
         if (keyState.arrowUp) {
@@ -87,10 +92,110 @@ export class GameManager {
         if (keyState.key3) this.currentBulletType = 'heavy';
         if (keyState.key4) this.currentBulletType = 'explosive';
 
+        this.updateEnemies(deltaTime);
+        this.spawnEnemies(deltaTime);
+        this.enemyShoot();
         this.updateBullets(deltaTime);
         this.checkBulletMapCollisions();
         this.checkBulletTankCollisions();
+        this.checkBulletEnemyCollisions();
+        this.checkEnemyTankCollisions();
         this.cleanupBullets();
+        this.cleanupEnemies();
+    }
+
+    private spawnEnemies(deltaTime: number) {
+        if (this.enemies.length >= this.config.enemies.maxCount) return;
+
+        this.spawnTimer += deltaTime;
+        if (this.spawnTimer < this.config.enemies.spawnInterval) return;
+
+        this.spawnTimer = 0;
+
+        const spawnPositions = this.getSpawnPositions();
+        if (spawnPositions.length === 0) return;
+
+        const pos = spawnPositions[Math.floor(Math.random() * spawnPositions.length)];
+        const enemyClass = this.enemyClasses[Math.floor(Math.random() * this.enemyClasses.length)];
+
+        const enemy = new Enemy(pos, enemyClass, this.mapBounds);
+        this.enemies.push(enemy);
+    }
+
+    private getSpawnPositions(): Vector2D[] {
+        const positions: Vector2D[] = [];
+        const ts = this.mapBounds.tileSize;
+        const half = ts / 2;
+
+        const spawnPoints = [
+            { col: 1, row: 1 },
+            { col: this.mapBounds.cols - 2, row: 1 },
+            { col: 1, row: this.mapBounds.rows - 2 },
+            { col: this.mapBounds.cols - 2, row: this.mapBounds.rows - 2 },
+            { col: Math.floor(this.mapBounds.cols / 2), row: 1 },
+        ];
+
+        for (const point of spawnPoints) {
+            const x = point.col * ts + half;
+            const y = point.row * ts + half;
+
+            const distToTank = Math.sqrt(
+                Math.pow(x - this.tank.position.x, 2) +
+                Math.pow(y - this.tank.position.y, 2)
+            );
+
+            if (distToTank > ts * 5 && this.canEnemyMoveTo(x, y)) {
+                positions.push(new Vector2D(x, y));
+            }
+        }
+
+        return positions;
+    }
+
+    private updateEnemies(deltaTime: number) {
+        for (const enemy of this.enemies) {
+            const speedMod = this.getSpeedModifierAt(enemy.position.x, enemy.position.y);
+            enemy.update(deltaTime, this.tank.position, (x, y) => this.canEnemyMoveTo(x, y), speedMod);
+        }
+    }
+
+    private enemyShoot() {
+        for (const enemy of this.enemies) {
+            const bulletInfo = enemy.tryShoot();
+            if (!bulletInfo) continue;
+
+            const bullet = new Bullet(
+                new Vector2D(bulletInfo.x, bulletInfo.y),
+                bulletInfo.angle,
+                enemy.config.bulletConfig,
+                this.mapBounds
+            );
+
+            this.bullets.push(bullet);
+        }
+    }
+
+    private canEnemyMoveTo(x: number, y: number): boolean {
+        const ts = this.mapBounds.tileSize;
+        const half = 16;
+
+        const minCol = Math.floor((x - half) / ts);
+        const maxCol = Math.floor((x + half - 1) / ts);
+        const minRow = Math.floor((y - half) / ts);
+        const maxRow = Math.floor((y + half - 1) / ts);
+
+        for (let row = minRow; row <= maxRow; row++) {
+            for (let col = minCol; col <= maxCol; col++) {
+                if (row < 0 || row >= this.mapBounds.rows || col < 0 || col >= this.mapBounds.cols) {
+                    return false;
+                }
+                const cell = this.mapData.tiles[row][col];
+                if (cell.properties.isObstacle) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
     public getSpeedModifierAt(x: number, y: number): number {
@@ -238,12 +343,60 @@ export class GameManager {
             if (Math.abs(bx - tx) < (bSize + tSize) / 2 &&
                 Math.abs(by - ty) < (bSize + tSize) / 2) {
                 bullet.destroy();
+                this.tank.health -= bullet.damage;
+            }
+        }
+    }
+
+    private checkBulletEnemyCollisions() {
+        for (const bullet of this.bullets) {
+            if (!bullet.isAlive) continue;
+
+            for (const enemy of this.enemies) {
+                if (!enemy.isAlive) continue;
+
+                const bx = bullet.position.x;
+                const by = bullet.position.y;
+                const bSize = bullet.config.size;
+
+                const ex = enemy.position.x;
+                const ey = enemy.position.y;
+                const eSize = enemy.config.size;
+
+                if (Math.abs(bx - ex) < (bSize + eSize) / 2 &&
+                    Math.abs(by - ey) < (bSize + eSize) / 2) {
+                    bullet.destroy();
+                    enemy.takeDamage(bullet.damage);
+                }
+            }
+        }
+    }
+
+    private checkEnemyTankCollisions() {
+        for (const enemy of this.enemies) {
+            if (!enemy.isAlive) continue;
+
+            const ex = enemy.position.x;
+            const ey = enemy.position.y;
+            const eSize = enemy.config.size;
+
+            const tx = this.tank.position.x;
+            const ty = this.tank.position.y;
+            const tSize = this.config.tank.tankSize;
+
+            if (Math.abs(ex - tx) < (eSize + tSize) / 2 &&
+                Math.abs(ey - ty) < (eSize + tSize) / 2) {
+                this.tank.health -= 10;
             }
         }
     }
 
     private cleanupBullets() {
         this.bullets = this.bullets.filter(b => b.isAlive);
+    }
+
+    private cleanupEnemies() {
+        this.enemies = this.enemies.filter(e => e.isAlive);
     }
 
     public destroy() {
