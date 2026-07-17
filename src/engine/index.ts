@@ -7,7 +7,7 @@ export { GameObject } from './core/EntitySystem/gameObject';
 export { Transform } from './core/EntitySystem/transform';
 export { RigidBody2D } from './core/EntitySystem/rigidBody2D';
 export { Vector2D } from './core/EntitySystem/geometry/Vector2D';
-export { SquareShape } from './core/EntitySystem/geometry/ColissionSquareShape';
+export { SquareShape } from './core/EntitySystem/geometry/CollisionSquareShape';
 export type { bodyType, magnitudes, Iposition, Isize, CollisionData } from './core/EntitySystem/types';
 
 export { Collision2D } from './core/Collision2D/Collision2D';

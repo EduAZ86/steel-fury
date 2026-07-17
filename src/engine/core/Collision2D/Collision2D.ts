@@ -1,4 +1,4 @@
-import { SquareShape } from "../EntitySystem/geometry/ColissionSquareShape";
+import { SquareShape } from "../EntitySystem/geometry/CollisionSquareShape";
 import { collisionFace } from "./types";
 
 export class Collision2D {

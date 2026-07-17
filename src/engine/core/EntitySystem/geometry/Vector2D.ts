@@ -27,7 +27,7 @@ export class Vector2D {
         return new Vector2D(this.x + vector.x, this.y + vector.y);
     }
 
-    public Substract(vector: Vector2D) {
+    public Subtract(vector: Vector2D) {
         return new Vector2D(this.x - vector.x, this.y - vector.y);
     }
 

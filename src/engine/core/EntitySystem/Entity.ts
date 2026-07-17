@@ -1,10 +1,18 @@
 import { GameObject } from "./gameObject";
 import { Iposition, Isize, bodyType } from "./types";
+
+interface Coroutine {
+    _OnUpdate: () => void;
+    _ConditionFullfilled: () => boolean;
+    _Next: () => void;
+    isFinished: boolean;
+}
+
 export class Entity {
     name: string;
     health: number;
     started: boolean;
-    coroutines: any[];
+    coroutines: Coroutine[];
     gameObject: GameObject;
     constructor(name: string, bodyType: bodyType, health: number, gameObject: GameObject) {
         this.started = false;

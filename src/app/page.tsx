@@ -58,7 +58,7 @@ export default function Home() {
       updateState: () => {
         gameRenderer.setBullets(game.bullets);
       },
-      updatePysics: () => {},
+      updatePhysics: () => {},
       inputsHandler: () => {},
       updateIA: () => {},
     };
@@ -74,19 +74,10 @@ export default function Home() {
   }, []);
 
   return (
-    <div style={{
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      minHeight: '100vh',
-      background: '#0a0a0a',
-    }}>
+    <div className="flex justify-center items-center min-h-screen bg-[#0a0a0a]">
       <canvas
         ref={canvasRef}
-        style={{
-          border: '2px solid #333',
-          imageRendering: 'pixelated',
-        }}
+        className="border-2 border-[#333] [image-rendering:pixelated]"
       />
     </div>
   );

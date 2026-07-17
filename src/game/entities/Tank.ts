@@ -68,7 +68,7 @@ export class Tank extends Entity {
     public moveBackward(dt: number) {
         const rad = (this.gameObject.transform.rotation - 90) * (Math.PI / 180);
         const dir = new Vector2D(Math.cos(rad), Math.sin(rad));
-        this.velocity = this.velocity.Substract(dir.Multiply(this.acceleration * dt));
+        this.velocity = this.velocity.Subtract(dir.Multiply(this.acceleration * dt));
         if (this.velocity.magnitude > this.maxSpeed * 0.5) {
             this.velocity = this.velocity.normalized.Multiply(this.maxSpeed * 0.5);
         }
@@ -107,7 +107,6 @@ export class Tank extends Entity {
             }
             if (!okX && !okY) {
                 // Try each axis independently for wall sliding
-                const curX = this.gameObject.transform.position.x;
                 const curY = this.gameObject.transform.position.y;
                 if (canMoveTo(newX, curY)) {
                     this.gameObject.transform.updatePosition({ x: newX, y: curY });
