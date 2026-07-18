@@ -11,6 +11,11 @@ export type { EnemyConfig, EnemyClass } from './entities/enemies/types';
 export { GameManager } from './GameManager';
 export type { GameConfig } from './GameManager';
 
+export { PlayerController } from './systems/PlayerController';
+export { EnemySpawner } from './systems/EnemySpawner';
+export { CollisionSystem } from './systems/CollisionSystem';
+export { GameState } from './systems/GameState';
+
 export { createTestMap, getMapDimensions } from './maps/testMap';
 export type { MapData } from './maps/testMap';
 
