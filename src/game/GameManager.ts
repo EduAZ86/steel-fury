@@ -2,7 +2,8 @@ import { Inputs, keys } from "@/engine";
 import { Vector2D } from "@/engine/core/EntitySystem/geometry/Vector2D";
 import { Tank, TankConfig } from "./entities/Tank";
 import { Bullet, BulletConfig, BULLET_TYPES } from "./entities/Bullet";
-import { Enemy, EnemyClass, ENEMY_CONFIGS } from "./entities/Enemy";
+import { Enemy } from "./entities/enemies/Enemy";
+import { EnemyClass } from "./entities/enemies/types";
 import { MapData } from "./maps/testMap";
 import { Cell } from "./maps/types";
 

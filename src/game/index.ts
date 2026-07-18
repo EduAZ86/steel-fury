@@ -4,8 +4,9 @@ export type { TankConfig } from './entities/Tank';
 export { Bullet, BULLET_TYPES } from './entities/Bullet';
 export type { BulletConfig } from './entities/Bullet';
 
-export { Enemy, ENEMY_CONFIGS } from './entities/Enemy';
-export type { EnemyConfig, EnemyClass } from './entities/Enemy';
+export { Enemy } from './entities/enemies/Enemy';
+export { ENEMY_CONFIGS } from './entities/enemies/config';
+export type { EnemyConfig, EnemyClass } from './entities/enemies/types';
 
 export { GameManager } from './GameManager';
 export type { GameConfig } from './GameManager';

@@ -3,7 +3,7 @@ import { SpriteRenderer } from "@/engine/core/Render/spritesRender";
 import { AssetLoader } from "@/engine/core/Render/AssetLoader";
 import { Tank } from "../entities/Tank";
 import { Bullet } from "../entities/Bullet";
-import { Enemy } from "../entities/Enemy";
+import { Enemy } from "../entities/enemies/Enemy";
 import { Cell } from "../maps/types";
 import { MapData } from "../maps/testMap";
 
