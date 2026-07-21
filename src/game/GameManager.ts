@@ -2,7 +2,7 @@ import { Vector2D } from "@/engine/core/EntitySystem/geometry/Vector2D";
 import { Tank, TankConfig } from "./entities/Tank";
 import { Bullet, BulletConfig } from "./entities/Bullet";
 import { Enemy } from "./entities/enemies/Enemy";
-import { MapData } from "./maps/testMap";
+import { GeneratedMap } from "./maps/generators/MapGenerator";
 import { PlayerController } from "./systems/PlayerController";
 import { EnemySpawner } from "./systems/EnemySpawner";
 import { CollisionSystem } from "./systems/CollisionSystem";
@@ -20,7 +20,7 @@ export interface GameConfig {
 export class GameManager {
     public tank: Tank;
     public bullets: Bullet[] = [];
-    public mapData: MapData;
+    public mapData: GeneratedMap;
 
     private config: GameConfig;
     private mapBounds: { cols: number; rows: number; tileSize: number };
@@ -30,7 +30,7 @@ export class GameManager {
     private collisionSystem: CollisionSystem;
     private gameState: GameState;
 
-    constructor(mapData: MapData, config: GameConfig) {
+    constructor(mapData: GeneratedMap, config: GameConfig) {
         this.mapData = mapData;
         this.config = config;
 
@@ -40,12 +40,8 @@ export class GameManager {
             tileSize: mapData.tileSize,
         };
 
-        const spawnX =
-            Math.floor(this.mapBounds.cols / 2) * mapData.tileSize +
-            mapData.tileSize / 2;
-        const spawnY =
-            (this.mapBounds.rows - 4) * mapData.tileSize +
-            mapData.tileSize / 2;
+        const spawnX = mapData.spawnCol * mapData.tileSize + mapData.tileSize / 2;
+        const spawnY = mapData.spawnRow * mapData.tileSize + mapData.tileSize / 2;
 
         this.tank = new Tank(
             "playerTank",
@@ -108,7 +104,7 @@ export class GameManager {
             bullet.update(deltaTime);
         }
 
-        this.collisionSystem.resolveAll(
+        const baseDestroyed = this.collisionSystem.resolveAll(
             this.bullets,
             this.enemySpawner.enemies,
             this.tank,
@@ -122,10 +118,15 @@ export class GameManager {
         this.bullets = this.bullets.filter((b) => b.isAlive);
         this.enemySpawner.cleanup();
 
-        this.gameState.checkGameOver(this.tank.health);
+        this.gameState.checkGameOver(this.tank.health, baseDestroyed);
     }
 
     private updateEnemyAI(deltaTime: number) {
+        const basePos = new Vector2D(
+            this.mapData.baseCol * this.mapData.tileSize + this.mapData.tileSize / 2,
+            this.mapData.baseRow * this.mapData.tileSize + this.mapData.tileSize / 2
+        );
+
         for (const enemy of this.enemySpawner.enemies) {
             const speedMod = this.collisionSystem.getSpeedModifierAt(
                 enemy.position.x,
@@ -135,6 +136,7 @@ export class GameManager {
             enemy.update(
                 deltaTime,
                 this.tank.position,
+                basePos,
                 (x, y) =>
                     this.collisionSystem.canMoveTo(x, y, 16, this.mapData),
                 speedMod

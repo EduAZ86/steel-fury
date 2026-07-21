@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useRef, useState, useCallback } from "react";
 import { MainLoop, RenderSystem, CanvasHandler, SpriteRenderer, AssetLoader } from "@/engine";
-import { GameManager, createTestMap, getMapDimensions, GameRenderer } from "@/game";
+import { GameManager, MapGenerator, GeneratedMap, loadAllAssets, GameRenderer } from "@/game";
 
 export default function Home() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -13,7 +13,7 @@ export default function Home() {
   const [isGameOver, setIsGameOver] = useState(false);
   const [finalScore, setFinalScore] = useState(0);
 
-  const startGame = useCallback(() => {
+  const startGame = useCallback(async () => {
     if (!canvasRef.current) return;
 
     if (loopRef.current) {
@@ -26,28 +26,33 @@ export default function Home() {
     const canvasHandler = new CanvasHandler();
     canvasHandler.init(canvasRef.current);
 
-    const mapDims = getMapDimensions();
-    canvasHandler.resize(mapDims.width, mapDims.height);
+    const mapData = MapGenerator.generate();
+    const tileSize = mapData.tileSize;
+    const cols = mapData.tiles[0].length;
+    const rows = mapData.tiles.length;
+    const mapWidth = cols * tileSize;
+    const mapHeight = rows * tileSize;
+
+    canvasHandler.resize(mapWidth, mapHeight);
 
     const spriteRenderer = new SpriteRenderer();
     const assetLoader = new AssetLoader();
+    await loadAllAssets(assetLoader);
     const renderSystem = new RenderSystem(canvasHandler, spriteRenderer, assetLoader);
 
-    const testMap = createTestMap();
-
     const gameRenderer = new GameRenderer(canvasHandler, spriteRenderer, assetLoader);
-    gameRenderer.setMap(testMap);
+    gameRenderer.setMap(mapData);
     renderSystem.setGameRenderer(gameRenderer);
     rendererRef.current = gameRenderer;
 
-    const game = new GameManager(testMap, {
+    const game = new GameManager(mapData, {
       tank: {
         maxSpeed: 150,
         acceleration: 400,
         deceleration: 3,
         rotationSpeed: 180,
-        tileSize: mapDims.tileSize,
-        tankSize: mapDims.tileSize - 4,
+        tileSize,
+        tankSize: tileSize - 4,
         health: 100,
       },
       bullet: {

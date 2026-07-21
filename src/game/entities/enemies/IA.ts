@@ -7,6 +7,7 @@ export class EnemyIA {
 
     private aiState: AIState = "patrol";
     private patrolTarget: Vector2D | null = null;
+    private targetBase: boolean = false;
 
     constructor(enemy: Enemy) {
         this.enemy = enemy;
@@ -14,61 +15,71 @@ export class EnemyIA {
 
     public update(
         dt: number,
-        playerPosition: Vector2D
+        playerPosition: Vector2D,
+        basePosition: Vector2D
     ) {
         const distToPlayer =
             this.enemy.position.Subtract(playerPosition).magnitude;
 
-        const angleToPlayer =
-            this.enemy.getAngleToTarget(playerPosition);
+        const distToBase =
+            this.enemy.position.Subtract(basePosition).magnitude;
+
+        const primaryTarget = distToBase < distToPlayer ? basePosition : playerPosition;
+        this.targetBase = distToBase < distToPlayer;
+
+        const angleToTarget =
+            this.enemy.getAngleToTarget(primaryTarget);
 
         const angleDiff =
             this.enemy.getAngleDifference(
                 this.enemy.rotation,
-                angleToPlayer
+                angleToTarget
             );
 
         this.updateState(
             distToPlayer,
+            distToBase,
             angleDiff
         );
 
         switch (this.aiState) {
             case "patrol":
-                this.doPatrol(dt);
+                this.doPatrol(dt, basePosition);
                 break;
 
             case "chase":
-                this.doChase(dt, angleToPlayer);
+                this.doChase(dt, angleToTarget);
                 break;
 
             case "attack":
-                this.doAttack(dt, angleToPlayer);
+                this.doAttack(dt, angleToTarget);
                 break;
 
             case "retreat":
-                this.doRetreat(dt, angleToPlayer);
+                this.doRetreat(dt, angleToTarget);
                 break;
         }
     }
 
     private updateState(
         distToPlayer: number,
+        distToBase: number,
         angleDiff: number
     ) {
-        const isFacingPlayer = Math.abs(angleDiff) < 30;
+        const isFacingTarget = Math.abs(angleDiff) < 30;
+        const closestDist = Math.min(distToPlayer, distToBase);
 
-        if (distToPlayer < 100) {
+        if (closestDist < 100) {
             this.aiState = "retreat";
         }
         else if (
-            distToPlayer < this.enemy.config.aggroRange &&
-            isFacingPlayer
+            closestDist < this.enemy.config.aggroRange &&
+            isFacingTarget
         ) {
             this.aiState = "attack";
         }
         else if (
-            distToPlayer < this.enemy.config.aggroRange
+            closestDist < this.enemy.config.aggroRange
         ) {
             this.aiState = "chase";
         }
@@ -77,13 +88,14 @@ export class EnemyIA {
         }
     }
 
-    private doPatrol(dt: number) {
+    private doPatrol(dt: number, basePosition: Vector2D) {
         if (
             !this.patrolTarget ||
             this.enemy.isAtPatrolTarget(this.patrolTarget)
         ) {
-            this.patrolTarget =
-                this.enemy.pickNewPatrolTarget();
+            this.patrolTarget = this.targetBase
+                ? basePosition.Copy()
+                : this.enemy.pickNewPatrolTarget();
         }
 
         if (!this.patrolTarget) return;
@@ -97,22 +109,22 @@ export class EnemyIA {
 
     private doChase(
         dt: number,
-        angleToPlayer: number
+        angleToTarget: number
     ) {
-        this.enemy.rotateTowards(angleToPlayer, dt);
+        this.enemy.rotateTowards(angleToTarget, dt);
         this.enemy.moveForward(dt);
     }
 
     private doAttack(
         dt: number,
-        angleToPlayer: number
+        angleToTarget: number
     ) {
-        this.enemy.rotateTowards(angleToPlayer, dt);
+        this.enemy.rotateTowards(angleToTarget, dt);
 
         const diff =
             this.enemy.getAngleDifference(
                 this.enemy.rotation,
-                angleToPlayer
+                angleToTarget
             );
 
         if (Math.abs(diff) < 15) {
@@ -124,10 +136,10 @@ export class EnemyIA {
 
     private doRetreat(
         dt: number,
-        angleToPlayer: number
+        angleToTarget: number
     ) {
         const retreat =
-            (angleToPlayer + 180) % 360;
+            (angleToTarget + 180) % 360;
 
         this.enemy.rotateTowards(retreat, dt);
         this.enemy.moveForward(dt);

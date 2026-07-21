@@ -80,6 +80,7 @@ export class Enemy extends Entity {
     public update(
         deltaTime: number,
         playerPosition: Vector2D,
+        basePosition: Vector2D,
         canMoveTo: (x: number, y: number) => boolean,
         speedModifier: number
     ) {
@@ -89,7 +90,7 @@ export class Enemy extends Entity {
 
         this.shootTimer += deltaTime;
 
-        this.ai.update(dt, playerPosition);
+        this.ai.update(dt, playerPosition, basePosition);
 
         this.applyVelocity(
             dt,

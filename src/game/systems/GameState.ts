@@ -14,8 +14,8 @@ export class GameState {
         this._score += damage;
     }
 
-    public checkGameOver(playerHealth: number) {
-        if (playerHealth <= 0) {
+    public checkGameOver(playerHealth: number, baseDestroyed: boolean = false) {
+        if (playerHealth <= 0 || baseDestroyed) {
             this._isGameOver = true;
         }
     }

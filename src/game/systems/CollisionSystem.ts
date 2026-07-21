@@ -3,6 +3,8 @@ import { Tank } from "../entities/Tank";
 import { Bullet } from "../entities/Bullet";
 import { Enemy } from "../entities/enemies/Enemy";
 import { MapData } from "../maps/testMap";
+import { CellType, createCell } from "../maps/types";
+import { CELL_TYPES } from "../maps/cellSettings";
 
 export class CollisionSystem {
     private mapBounds: { cols: number; rows: number; tileSize: number };
@@ -18,8 +20,8 @@ export class CollisionSystem {
         tankSize: number,
         mapData: MapData,
         onEnemyDamage?: (enemy: Enemy, damage: number) => void
-    ) {
-        this.checkBulletMapCollisions(bullets, mapData);
+    ): boolean {
+        const baseDestroyed = this.checkBulletMapCollisions(bullets, mapData);
         this.checkBulletTankCollisions(bullets, tank, tankSize);
         this.checkBulletEnemyCollisions(
             bullets,
@@ -28,9 +30,12 @@ export class CollisionSystem {
             onEnemyDamage
         );
         this.resolveEntityCollisions(enemies, tank, tankSize);
+        return baseDestroyed;
     }
 
-    private checkBulletMapCollisions(bullets: Bullet[], mapData: MapData) {
+    private checkBulletMapCollisions(bullets: Bullet[], mapData: MapData): boolean {
+        let baseDestroyed = false;
+
         for (const bullet of bullets) {
             if (!bullet.isAlive) continue;
 
@@ -57,9 +62,38 @@ export class CollisionSystem {
             }
 
             if (cell.properties.hardness > 0) {
-                cell.properties.hardness -= bullet.damage;
-                if (cell.properties.hardness <= 0) {
-                    this.destroyTile(tileX, tileY, mapData);
+                const cellConfig = CELL_TYPES[cell.type];
+                const maxHP = cellConfig?.hardness ?? cell.properties.hardness;
+                const currentHardness = cell.properties.hardness;
+                const newHardness = currentHardness - bullet.damage;
+
+                if (newHardness <= 0) {
+                    if (cell.type === 'base') {
+                        baseDestroyed = true;
+                    }
+                    const destroyedKey = (cellConfig as Record<string, unknown>).destroyedKey as string | undefined;
+                    if (destroyedKey) {
+                        const destroyedType = destroyedKey as CellType;
+                        const destroyedConfig = CELL_TYPES[destroyedType];
+                        cell.type = destroyedType;
+                        cell.properties = { ...destroyedConfig };
+                        cell.isDamaged = true;
+                    } else {
+                        this.destroyTile(tileX, tileY, mapData);
+                    }
+                } else {
+                    cell.properties.hardness = newHardness;
+                    const damageRatio = (maxHP - newHardness) / maxHP;
+                    if (damageRatio >= 0.5 && !cell.isDamaged) {
+                        const damagedKey = (cellConfig as Record<string, unknown>).damagedKey as string | undefined;
+                        if (damagedKey) {
+                            const damagedType = damagedKey as CellType;
+                            const damagedConfig = CELL_TYPES[damagedType];
+                            cell.type = damagedType;
+                            cell.properties = { ...damagedConfig, hardness: newHardness };
+                            cell.isDamaged = true;
+                        }
+                    }
                 }
                 bullet.destroy();
                 continue;
@@ -67,20 +101,12 @@ export class CollisionSystem {
 
             bullet.destroy();
         }
+
+        return baseDestroyed;
     }
 
     private destroyTile(x: number, y: number, mapData: MapData) {
-        mapData.tiles[y][x] = {
-            type: "empty",
-            properties: {
-                color: "#1a1a2e",
-                hardness: 0,
-                speedModifier: 1.0,
-                passThrough: true,
-                isObstacle: false,
-                isGround: false,
-            },
-        };
+        mapData.tiles[y][x] = createCell('ground');
 
         const neighbors = [
             [x - 1, y],
@@ -98,17 +124,7 @@ export class CollisionSystem {
             ) {
                 const neighbor = mapData.tiles[ny][nx];
                 if (neighbor.type === "water" || neighbor.type === "forest") {
-                    mapData.tiles[ny][nx] = {
-                        type: "empty",
-                        properties: {
-                            color: "#1a1a2e",
-                            hardness: 0,
-                            speedModifier: 1.0,
-                            passThrough: true,
-                            isObstacle: false,
-                            isGround: false,
-                        },
-                    };
+                    mapData.tiles[ny][nx] = createCell('ground');
                 }
             }
         }

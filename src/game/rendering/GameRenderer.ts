@@ -6,6 +6,7 @@ import { Bullet } from "../entities/Bullet";
 import { Enemy } from "../entities/enemies/Enemy";
 import { Cell } from "../maps/types";
 import { MapData } from "../maps/testMap";
+import { loadSprite } from "../assets/loadAssets";
 
 export class GameRenderer {
     private ctx: CanvasRenderingContext2D;
@@ -58,11 +59,29 @@ export class GameRenderer {
     };
 
     private drawTile(x: number, y: number, size: number, cell: Cell) {
+        const sprite = loadSprite(this.assetLoader, cell.type);
+        if (sprite) {
+            const sx = size / sprite.width;
+            const sy = size / sprite.height;
+            this.spriteRenderer.drawSpriteAt(this.ctx, sprite, x + size / 2, y + size / 2, { scaleX: sx, scaleY: sy });
+            return;
+        }
+
         const color = cell.properties.color;
         const half = size / 2;
 
-        if (cell.type === 'empty') {
+        if (cell.type === 'ground') {
             this.spriteRenderer.drawRect(this.ctx, x, y, size, size, { color });
+            return;
+        }
+
+        if (cell.type === 'hardwall' || cell.type === 'hardwall_damaged') {
+            this.spriteRenderer.drawRect(this.ctx, x, y, size, size, { color });
+            const q = size / 4;
+            this.spriteRenderer.drawRect(this.ctx, x + 1, y + 1, q * 2 - 1, q * 2 - 1, { color: '#9ca3af' });
+            this.spriteRenderer.drawRect(this.ctx, x + q * 2 + 1, y + 1, q * 2 - 1, q * 2 - 1, { color: '#9ca3af' });
+            this.spriteRenderer.drawRect(this.ctx, x + 1, y + q * 2 + 1, q * 2 - 1, q * 2 - 1, { color: '#9ca3af' });
+            this.spriteRenderer.drawRect(this.ctx, x + q * 2 + 1, y + q * 2 + 1, q * 2 - 1, q * 2 - 1, { color: '#9ca3af' });
             return;
         }
 
@@ -104,9 +123,11 @@ export class GameRenderer {
         const rotation = this.tank.rotation;
         const size = this.tank.gameObject.transform.scale.x;
 
-        const sprite = this.assetLoader.get('playerTank');
+        const sprite = loadSprite(this.assetLoader, 'playerTank');
         if (sprite) {
-            this.spriteRenderer.drawSpriteAt(this.ctx, sprite, pos.x, pos.y, { rotation });
+            const sx = size / sprite.width;
+            const sy = size / sprite.height;
+            this.spriteRenderer.drawSpriteAt(this.ctx, sprite, pos.x, pos.y, { rotation, scaleX: sx, scaleY: sy });
         } else {
             this.drawTankPlaceholder(pos.x, pos.y, size, rotation, '#4ade80', '#166534');
         }
@@ -139,9 +160,11 @@ export class GameRenderer {
             const pos = bullet.position;
             const size = bullet.config.size;
 
-            const sprite = this.assetLoader.get('bullet');
+            const sprite = loadSprite(this.assetLoader, 'bullet');
             if (sprite) {
-                this.spriteRenderer.drawSpriteAt(this.ctx, sprite, pos.x, pos.y);
+                const sx = size / sprite.width;
+                const sy = size / sprite.height;
+                this.spriteRenderer.drawSpriteAt(this.ctx, sprite, pos.x, pos.y, { scaleX: sx, scaleY: sy });
             } else {
                 this.spriteRenderer.drawCircle(this.ctx, pos.x, pos.y, size / 2, {
                     color: '#fbbf24', strokeColor: '#f59e0b', strokeWidth: 1,
@@ -157,7 +180,15 @@ export class GameRenderer {
             const rotation = enemy.rotation;
             const size = enemy.config.size;
 
-            this.drawTankPlaceholder(pos.x, pos.y, size, rotation, enemy.config.color, enemy.config.darkColor);
+            const spriteKey = `tank_${enemy.enemyClass}`;
+            const sprite = loadSprite(this.assetLoader, spriteKey);
+            if (sprite) {
+                const sx = size / sprite.width;
+                const sy = size / sprite.height;
+                this.spriteRenderer.drawSpriteAt(this.ctx, sprite, pos.x, pos.y, { rotation, scaleX: sx, scaleY: sy });
+            } else {
+                this.drawTankPlaceholder(pos.x, pos.y, size, rotation, enemy.config.color, enemy.config.darkColor);
+            }
 
             if (enemy.health < enemy.config.health) {
                 this.spriteRenderer.drawHealthBar(
