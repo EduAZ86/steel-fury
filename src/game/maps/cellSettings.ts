@@ -206,7 +206,7 @@ export const CELL_TYPES = {
     },
     base: {
         color: '#dc2626',
-        hardness: 1,
+        hardness: 100,
         speedModifier: 0.0,
         passThrough: false,
         isObstacle: true,

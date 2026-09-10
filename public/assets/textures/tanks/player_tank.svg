@@ -1,46 +1,35 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
-<!-- Player tank: green with black outline -->
-<!-- Outline top -->
-<rect x="8" y="0" width="4" height="4" fill="#000"/>
-<rect x="12" y="0" width="4" height="4" fill="#000"/>
-<rect x="16" y="0" width="4" height="4" fill="#000"/>
-<!-- Outline left + body -->
-<rect x="4" y="4" width="4" height="4" fill="#000"/>
-<rect x="8" y="4" width="4" height="4" fill="#3A8A3E"/>
-<rect x="12" y="4" width="4" height="4" fill="#4AA84E"/>
-<rect x="16" y="4" width="4" height="4" fill="#4AA84E"/>
-<rect x="20" y="4" width="4" height="4" fill="#000"/>
-<!-- Outline left + body + outline right -->
-<rect x="4" y="8" width="4" height="4" fill="#000"/>
-<rect x="8" y="8" width="4" height="4" fill="#3A8A3E"/>
-<rect x="12" y="8" width="4" height="4" fill="#4AA84E"/>
-<rect x="16" y="8" width="4" height="4" fill="#4AA84E"/>
-<rect x="20" y="8" width="4" height="4" fill="#000"/>
-<!-- Outline left + body + outline right -->
-<rect x="4" y="12" width="4" height="4" fill="#000"/>
-<rect x="8" y="12" width="4" height="4" fill="#3A8A3E"/>
-<rect x="12" y="12" width="4" height="4" fill="#2E7A32"/>
-<rect x="16" y="12" width="4" height="4" fill="#2E7A32"/>
-<rect x="20" y="12" width="4" height="4" fill="#000"/>
-<!-- Outline left + body + outline right -->
-<rect x="4" y="16" width="4" height="4" fill="#000"/>
-<rect x="8" y="16" width="4" height="4" fill="#3A8A3E"/>
-<rect x="12" y="16" width="4" height="4" fill="#4AA84E"/>
-<rect x="16" y="16" width="4" height="4" fill="#4AA84E"/>
-<rect x="20" y="16" width="4" height="4" fill="#000"/>
-<!-- Outline left + treads + outline right -->
-<rect x="4" y="20" width="4" height="4" fill="#000"/>
-<rect x="8" y="20" width="4" height="4" fill="#2A5A2E"/>
-<rect x="12" y="20" width="4" height="4" fill="#3A8A3E"/>
-<rect x="16" y="20" width="4" height="4" fill="#3A8A3E"/>
-<rect x="20" y="20" width="4" height="4" fill="#000"/>
-<!-- Outline bottom -->
-<rect x="4" y="24" width="4" height="4" fill="#000"/>
-<rect x="8" y="24" width="4" height="4" fill="#2A5A2E"/>
-<rect x="12" y="24" width="4" height="4" fill="#2A5A2E"/>
-<rect x="16" y="24" width="4" height="4" fill="#2A5A2E"/>
-<rect x="20" y="24" width="4" height="4" fill="#000"/>
-<rect x="8" y="28" width="4" height="4" fill="#000"/>
-<rect x="12" y="28" width="4" height="4" fill="#000"/>
-<rect x="16" y="28" width="4" height="4" fill="#000"/>
+<!-- Player tank: green, barrel up, treads left/right -->
+<!-- Hull outline -->
+<rect x="7" y="7" width="18" height="24" fill="#1B5E20"/>
+<!-- Hull body -->
+<rect x="8" y="8" width="16" height="22" fill="#4AA84E"/>
+<!-- Hull bottom shading -->
+<rect x="8" y="24" width="16" height="6" fill="#2E7A32"/>
+<!-- Hull top highlight -->
+<rect x="9" y="9" width="14" height="3" fill="#6BCF74"/>
+<!-- Left tread -->
+<rect x="2" y="4" width="6" height="26" fill="#262626"/>
+<rect x="3" y="5" width="4" height="24" fill="#404040"/>
+<rect x="3" y="8" width="4" height="2" fill="#6b7280"/>
+<rect x="3" y="14" width="4" height="2" fill="#6b7280"/>
+<rect x="3" y="20" width="4" height="2" fill="#6b7280"/>
+<rect x="3" y="26" width="4" height="2" fill="#6b7280"/>
+<!-- Right tread -->
+<rect x="24" y="4" width="6" height="26" fill="#262626"/>
+<rect x="25" y="5" width="4" height="24" fill="#404040"/>
+<rect x="25" y="8" width="4" height="2" fill="#6b7280"/>
+<rect x="25" y="14" width="4" height="2" fill="#6b7280"/>
+<rect x="25" y="20" width="4" height="2" fill="#6b7280"/>
+<rect x="25" y="26" width="4" height="2" fill="#6b7280"/>
+<!-- Turret outline -->
+<rect x="11" y="11" width="10" height="11" fill="#1B5E20"/>
+<!-- Turret -->
+<rect x="12" y="12" width="8" height="9" fill="#5FC46A"/>
+<rect x="12" y="18" width="8" height="3" fill="#3A8A3E"/>
+<!-- Barrel -->
+<rect x="14" y="0" width="4" height="13" fill="#14501A"/>
+<rect x="14" y="0" width="1" height="13" fill="#2E7A32"/>
+<!-- Muzzle -->
+<rect x="13" y="0" width="6" height="2" fill="#0F3D14"/>
 </svg>

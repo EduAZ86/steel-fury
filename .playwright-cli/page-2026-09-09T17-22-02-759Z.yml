@@ -1,0 +1,42 @@
+- generic [active] [ref=e1]:
+  - main [ref=e2]:
+    - generic [ref=e3]:
+      - paragraph [ref=e4]: Forge2D
+      - heading "A 2D engine you can forge games with." [level=1] [ref=e5]
+      - paragraph [ref=e6]: A tiny, extensible 2D game engine for the browser. A small, typed core — main loop, entity system, collision, canvas renderer and input — with the game itself as just another instance.
+      - paragraph [ref=e7]: "Live proof below: Steel Fury, a tank battle demo built on top of the engine."
+    - generic [ref=e8]:
+      - heading "A small core, cleanly separated" [level=2] [ref=e9]
+      - paragraph [ref=e10]: The engine never imports the game. It exposes interfaces the game satisfies — so the demo is an instance, not the engine.
+      - generic [ref=e11]:
+        - generic [ref=e12]:
+          - heading "MainLoop & DeltaTime" [level=3] [ref=e13]
+          - paragraph [ref=e14]: A requestAnimationFrame pipeline with decoupled update/draw phases and a delta-time clock. Tracks APS/FPS out of the box.
+        - generic [ref=e15]:
+          - heading "EntitySystem" [level=3] [ref=e16]
+          - paragraph [ref=e17]: "Unity-style entities: Transform, RigidBody2D and lifecycle hooks (Awake, Start, Update, OnCollision). Compose games from objects, not switch statements."
+        - generic [ref=e18]:
+          - heading "Collision2D" [level=3] [ref=e19]
+          - paragraph [ref=e20]: Axis-aligned square collision with resolved contact faces, ready to feed into physics or gameplay logic.
+        - generic [ref=e21]:
+          - heading "RenderSystem" [level=3] [ref=e22]
+          - paragraph [ref=e23]: Canvas-backed rendering with sprite, rect, circle and text primitives — plus rotation, scale and alpha per draw call.
+        - generic [ref=e24]:
+          - heading "AssetLoader" [level=3] [ref=e25]
+          - paragraph [ref=e26]: Cached and de-duplicated async asset loading. Request the same texture from anywhere without double-fetching.
+        - generic [ref=e27]:
+          - heading "Input & Screen" [level=3] [ref=e28]
+          - paragraph [ref=e29]: Keyboard and mouse snapshots behind one device interface, with a responsive screen-size tracker.
+    - generic [ref=e30]:
+      - generic [ref=e31]:
+        - heading "Try it now" [level=2] [ref=e32]
+        - paragraph [ref=e33]: Steel Fury running inside a real instance of Forge2D. Hit START to begin.
+      - generic [ref=e34]:
+        - generic [ref=e35]: Steel Fury — Forge2D demo
+        - generic [ref=e41]: "SCORE: 0"
+    - generic [ref=e49]:
+      - heading "Engine-first, game-second" [level=2] [ref=e50]
+      - paragraph [ref=e51]: Steel Fury boots the engine in a few lines. Most of the hard parts — the loop, rendering and loading — live in the engine, not the game.
+      - code [ref=e53]: "// the engine is the product; the game is just an instance. const renderSystem = new RenderSystem(canvasHandler, spriteRenderer, assetLoader); const game = new GameManager(mapData, config); gameRenderer.setTank(game.tank); const loop = new MainLoop( { movementOfEntities: () => game.update(delta), updateState: () => { /* sync renderable state */ }, }, renderSystem ); loop.start();"
+    - generic [ref=e54]: Forge2D · the demo (Steel Fury) is an instance, not the engine
+  - alert [ref=e55]

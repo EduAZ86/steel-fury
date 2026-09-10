@@ -180,8 +180,7 @@ export class GameRenderer {
             const rotation = enemy.rotation;
             const size = enemy.config.size;
 
-            const spriteKey = `tank_${enemy.enemyClass}`;
-            const sprite = loadSprite(this.assetLoader, spriteKey);
+            const sprite = loadSprite(this.assetLoader, enemy.enemyClass);
             if (sprite) {
                 const sx = size / sprite.width;
                 const sy = size / sprite.height;

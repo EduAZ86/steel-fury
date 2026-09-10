@@ -118,7 +118,8 @@ export class GameManager {
         this.bullets = this.bullets.filter((b) => b.isAlive);
         this.enemySpawner.cleanup();
 
-        this.gameState.checkGameOver(this.tank.health, baseDestroyed);
+        const baseReached = this.checkEnemyBaseCollision();
+        this.gameState.checkGameOver(this.tank.health, baseDestroyed || baseReached);
     }
 
     private updateEnemyAI(deltaTime: number) {
@@ -158,6 +159,23 @@ export class GameManager {
                 )
             );
         }
+    }
+
+    private checkEnemyBaseCollision(): boolean {
+        const baseX = this.mapData.baseCol * this.mapData.tileSize + this.mapData.tileSize / 2;
+        const baseY = this.mapData.baseRow * this.mapData.tileSize + this.mapData.tileSize / 2;
+        const threshold = this.mapData.tileSize * 1.5;
+
+        for (const enemy of this.enemySpawner.enemies) {
+            if (!enemy.isAlive) continue;
+            if (
+                Math.abs(enemy.position.x - baseX) < threshold &&
+                Math.abs(enemy.position.y - baseY) < threshold
+            ) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public get score(): number {

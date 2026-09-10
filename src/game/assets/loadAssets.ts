@@ -17,7 +17,12 @@ export async function loadAllAssets(loader: AssetLoader): Promise<void> {
     const allPaths = Object.values(assetMap);
 
     await Promise.all(
-        allPaths.map((path) => loader.load(path).catch(() => null))
+        allPaths.map((path) =>
+            loader.load(path).catch((err) => {
+                console.warn(`[Assets] Failed to load: ${path}`, err);
+                return null;
+            })
+        )
     );
 }
 
