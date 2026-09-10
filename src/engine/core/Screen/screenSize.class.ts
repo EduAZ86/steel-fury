@@ -4,10 +4,12 @@ export class ScreenSize {
     private width: number;
     private height: number;
     private _onResize: ResizeCallback | null = null;
+    private _boundUpdateDimensions: () => void;
 
     constructor() {
         this.width = this.getWidthFromWindow();
         this.height = this.getHeightFromWindow();
+        this._boundUpdateDimensions = this.updateDimensions.bind(this);
     }
 
     private getWidthFromWindow(): number {
@@ -24,13 +26,13 @@ export class ScreenSize {
 
     public start() {
         if (typeof window !== 'undefined') {
-            window.addEventListener('resize', this.updateDimensions.bind(this));
+            window.addEventListener('resize', this._boundUpdateDimensions);
         }
     }
 
     public stop() {
         if (typeof window !== 'undefined') {
-            window.removeEventListener('resize', this.updateDimensions.bind(this));
+            window.removeEventListener('resize', this._boundUpdateDimensions);
         }
     }
 

@@ -1,32 +1,38 @@
-import { ArrowSpaceEnterEscKeys } from "@/engine/core/Input/ArrowSpaceEnterKeys";
 import { Vector2D } from "@/engine/core/EntitySystem/geometry/Vector2D";
 import { Tank, TankConfig } from "./entities/Tank";
 import { Bullet, BulletConfig } from "./entities/Bullet";
-import { MapData } from "./maps/testMap";
-import { tileType } from "./maps/types";
+import { Enemy } from "./entities/enemies/Enemy";
+import { GeneratedMap } from "./maps/generators/MapGenerator";
+import { PlayerController } from "./systems/PlayerController";
+import { EnemySpawner } from "./systems/EnemySpawner";
+import { CollisionSystem } from "./systems/CollisionSystem";
+import { GameState } from "./systems/GameState";
 
 export interface GameConfig {
     tank: TankConfig;
     bullet: BulletConfig;
+    enemies: {
+        maxCount: number;
+        spawnInterval: number;
+    };
 }
-
-const DESTROYABLE_TILES: tileType[] = ['brick', 'water', 'forest'];
-const SOLID_TILES: tileType[] = ['brick', 'steel', 'water', 'base'];
 
 export class GameManager {
     public tank: Tank;
     public bullets: Bullet[] = [];
-    public mapData: MapData;
+    public mapData: GeneratedMap;
 
-    private keys: ArrowSpaceEnterEscKeys;
     private config: GameConfig;
     private mapBounds: { cols: number; rows: number; tileSize: number };
 
-    constructor(mapData: MapData, config: GameConfig) {
+    private playerController: PlayerController;
+    private enemySpawner: EnemySpawner;
+    private collisionSystem: CollisionSystem;
+    private gameState: GameState;
+
+    constructor(mapData: GeneratedMap, config: GameConfig) {
         this.mapData = mapData;
         this.config = config;
-        this.keys = new ArrowSpaceEnterEscKeys();
-        this.keys.getKeys();
 
         this.mapBounds = {
             cols: mapData.tiles[0].length,
@@ -34,172 +40,157 @@ export class GameManager {
             tileSize: mapData.tileSize,
         };
 
-        const spawnX = Math.floor(this.mapBounds.cols / 2) * mapData.tileSize + mapData.tileSize / 2;
-        const spawnY = (this.mapBounds.rows - 4) * mapData.tileSize + mapData.tileSize / 2;
+        const spawnX = mapData.spawnCol * mapData.tileSize + mapData.tileSize / 2;
+        const spawnY = mapData.spawnRow * mapData.tileSize + mapData.tileSize / 2;
 
         this.tank = new Tank(
-            'playerTank',
+            "playerTank",
             new Vector2D(spawnX, spawnY),
             config.tank,
             this.mapBounds
         );
-    }
 
-    public update(deltaTime: number) {
-        this.handleInput(deltaTime);
-        this.tank.updateShootCooldown(deltaTime);
-        this.updateBullets(deltaTime);
-        this.checkBulletMapCollisions();
-        this.checkBulletTankCollisions();
-        this.cleanupBullets();
-    }
-
-    private handleInput(deltaTime: number) {
-        const keyState = this.keys.keysStatus;
-        let moving = false;
-
-        const canMove = (x: number, y: number) => this.canTankMoveTo(x, y);
-
-        if (keyState.arrowUp) {
-            this.tank.move('up', deltaTime, canMove);
-            moving = true;
-        } else if (keyState.arrowDown) {
-            this.tank.move('down', deltaTime, canMove);
-            moving = true;
-        } else if (keyState.arrowLeft) {
-            this.tank.move('left', deltaTime, canMove);
-            moving = true;
-        } else if (keyState.arrowRight) {
-            this.tank.move('right', deltaTime, canMove);
-            moving = true;
-        }
-
-        if (!moving) {
-            this.tank.stopMoving();
-        }
-
-        if (keyState.space || keyState.enter) {
-            this.shoot();
-        }
-    }
-
-    public canTankMoveTo(x: number, y: number): boolean {
-        const half = this.config.tank.tankSize / 2;
-        const ts = this.mapBounds.tileSize;
-
-        const minCol = Math.floor((x - half) / ts);
-        const maxCol = Math.floor((x + half - 1) / ts);
-        const minRow = Math.floor((y - half) / ts);
-        const maxRow = Math.floor((y + half - 1) / ts);
-
-        for (let row = minRow; row <= maxRow; row++) {
-            for (let col = minCol; col <= maxCol; col++) {
-                if (row < 0 || row >= this.mapBounds.rows || col < 0 || col >= this.mapBounds.cols) {
-                    return false;
-                }
-                const tile = this.mapData.tiles[row][col];
-                if (SOLID_TILES.includes(tile)) {
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
-
-    private shoot() {
-        const bulletInfo = this.tank.tryShoot();
-        if (!bulletInfo) return;
-
-        const bullet = new Bullet(
-            new Vector2D(bulletInfo.x, bulletInfo.y),
-            bulletInfo.direction,
-            this.config.bullet,
+        this.playerController = new PlayerController(
+            this.tank,
+            config.tank,
             this.mapBounds
         );
 
-        this.bullets.push(bullet);
+        this.enemySpawner = new EnemySpawner(
+            config.enemies.maxCount,
+            config.enemies.spawnInterval,
+            this.mapBounds
+        );
+
+        this.collisionSystem = new CollisionSystem(this.mapBounds);
+        this.gameState = new GameState();
     }
 
-    private updateBullets(deltaTime: number) {
+    public update(deltaTime: number) {
+        if (this.gameState.isGameOver) return;
+
+        const canMoveTo = (x: number, y: number) =>
+            this.collisionSystem.canMoveTo(
+                x,
+                y,
+                this.config.tank.tankSize / 2,
+                this.mapData
+            );
+
+        const speedMod = this.collisionSystem.getSpeedModifierAt(
+            this.tank.position.x,
+            this.tank.position.y,
+            this.mapData
+        );
+
+        const newBullet = this.playerController.update(
+            deltaTime,
+            speedMod,
+            canMoveTo
+        );
+        if (newBullet) this.bullets.push(newBullet);
+
+        this.enemySpawner.update(
+            deltaTime,
+            this.tank.position,
+            (x, y) =>
+                this.collisionSystem.canMoveTo(x, y, 16, this.mapData)
+        );
+
+        this.updateEnemyAI(deltaTime);
+        this.enemyShoot();
+
         for (const bullet of this.bullets) {
             bullet.update(deltaTime);
         }
+
+        const baseDestroyed = this.collisionSystem.resolveAll(
+            this.bullets,
+            this.enemySpawner.enemies,
+            this.tank,
+            this.config.tank.tankSize,
+            this.mapData,
+            (_enemy, damage) => {
+                this.gameState.addScore(damage);
+            }
+        );
+
+        this.bullets = this.bullets.filter((b) => b.isAlive);
+        this.enemySpawner.cleanup();
+
+        const baseReached = this.checkEnemyBaseCollision();
+        this.gameState.checkGameOver(this.tank.health, baseDestroyed || baseReached);
     }
 
-    private checkBulletMapCollisions() {
-        for (const bullet of this.bullets) {
-            if (!bullet.isAlive) continue;
+    private updateEnemyAI(deltaTime: number) {
+        const basePos = new Vector2D(
+            this.mapData.baseCol * this.mapData.tileSize + this.mapData.tileSize / 2,
+            this.mapData.baseRow * this.mapData.tileSize + this.mapData.tileSize / 2
+        );
 
-            const tileX = bullet.tileX;
-            const tileY = bullet.tileY;
-
-            if (tileX < 0 || tileX >= this.mapBounds.cols ||
-                tileY < 0 || tileY >= this.mapBounds.rows) {
-                bullet.destroy();
-                continue;
-            }
-
-            const tile = this.mapData.tiles[tileY][tileX];
-
-            if (tile === 'base') {
-                bullet.destroy();
-                continue;
-            }
-
-            if (DESTROYABLE_TILES.includes(tile)) {
-                this.destroyTile(tileX, tileY);
-                bullet.destroy();
-                continue;
-            }
-
-            if (tile === 'steel') {
-                bullet.destroy();
-                continue;
-            }
+        for (const enemy of this.enemySpawner.enemies) {
+            const speedMod = this.collisionSystem.getSpeedModifierAt(
+                enemy.position.x,
+                enemy.position.y,
+                this.mapData
+            );
+            enemy.update(
+                deltaTime,
+                this.tank.position,
+                basePos,
+                (x, y) =>
+                    this.collisionSystem.canMoveTo(x, y, 16, this.mapData),
+                speedMod
+            );
         }
     }
 
-    private destroyTile(x: number, y: number) {
-        this.mapData.tiles[y][x] = 'empty';
+    private enemyShoot() {
+        for (const enemy of this.enemySpawner.enemies) {
+            const bulletInfo = enemy.tryShoot();
+            if (!bulletInfo) continue;
 
-        const neighbors = [
-            [x - 1, y], [x + 1, y], [x, y - 1], [x, y + 1],
-        ];
-
-        for (const [nx, ny] of neighbors) {
-            if (nx >= 0 && nx < this.mapBounds.cols && ny >= 0 && ny < this.mapBounds.rows) {
-                const neighbor = this.mapData.tiles[ny][nx];
-                if (neighbor === 'water' || neighbor === 'forest') {
-                    this.mapData.tiles[ny][nx] = 'empty';
-                }
-            }
+            this.bullets.push(
+                new Bullet(
+                    new Vector2D(bulletInfo.x, bulletInfo.y),
+                    bulletInfo.angle,
+                    enemy.config.bulletConfig,
+                    this.mapBounds
+                )
+            );
         }
     }
 
-    private checkBulletTankCollisions() {
-        for (const bullet of this.bullets) {
-            if (!bullet.isAlive) continue;
+    private checkEnemyBaseCollision(): boolean {
+        const baseX = this.mapData.baseCol * this.mapData.tileSize + this.mapData.tileSize / 2;
+        const baseY = this.mapData.baseRow * this.mapData.tileSize + this.mapData.tileSize / 2;
+        const threshold = this.mapData.tileSize * 1.5;
 
-            const bx = bullet.position.x;
-            const by = bullet.position.y;
-            const bSize = this.config.bullet.size;
-
-            const tx = this.tank.position.x;
-            const ty = this.tank.position.y;
-            const tSize = this.config.tank.tankSize;
-
-            if (Math.abs(bx - tx) < (bSize + tSize) / 2 &&
-                Math.abs(by - ty) < (bSize + tSize) / 2) {
-                bullet.destroy();
+        for (const enemy of this.enemySpawner.enemies) {
+            if (!enemy.isAlive) continue;
+            if (
+                Math.abs(enemy.position.x - baseX) < threshold &&
+                Math.abs(enemy.position.y - baseY) < threshold
+            ) {
+                return true;
             }
         }
+        return false;
     }
 
-    private cleanupBullets() {
-        this.bullets = this.bullets.filter(b => b.isAlive);
+    public get score(): number {
+        return this.gameState.score;
+    }
+
+    public get isGameOver(): boolean {
+        return this.gameState.isGameOver;
+    }
+
+    public get enemies(): Enemy[] {
+        return this.enemySpawner.enemies;
     }
 
     public destroy() {
-        this.keys.stopTracking();
+        this.playerController.destroy();
     }
 }

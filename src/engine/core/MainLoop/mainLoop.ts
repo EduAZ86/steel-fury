@@ -46,7 +46,7 @@ export class MainLoop {
         this.updateIteration.movementOfEntities();
         this.updateIteration.collisionHandler();
         this.updateIteration.updateState();
-        this.updateIteration.updatePysics();
+        this.updateIteration.updatePhysics();
         this.updateIteration.inputsHandler();
         this.updateIteration.updateIA();
         this.updateIteration.syncMultiplayerState && this.updateIteration.syncMultiplayerState()

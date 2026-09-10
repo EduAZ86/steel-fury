@@ -1,4 +1,4 @@
-import { SquareShape } from "./geometry/ColissionSquareShape";
+import { SquareShape } from "./geometry/CollisionSquareShape";
 import { bodyType, magnitudes, Iposition, Isize } from "./types";
 
 export class RigidBody2D {

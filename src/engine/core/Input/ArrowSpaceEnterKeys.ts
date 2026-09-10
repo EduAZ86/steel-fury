@@ -7,6 +7,10 @@ export interface keys {
     space: boolean;
     esc: boolean;
     enter: boolean;
+    key1: boolean;
+    key2: boolean;
+    key3: boolean;
+    key4: boolean;
 }
 
 export class ArrowSpaceEnterEscKeys {
@@ -17,6 +21,10 @@ export class ArrowSpaceEnterEscKeys {
     space: boolean;
     esc: boolean;
     enter: boolean;
+    key1: boolean;
+    key2: boolean;
+    key3: boolean;
+    key4: boolean;
     private _trackingKeys: boolean;
     private _handleKeyDown: (event: KeyboardEvent) => void;
     private _handleKeyUp: (event: KeyboardEvent) => void;
@@ -30,6 +38,10 @@ export class ArrowSpaceEnterEscKeys {
         this.space = false;
         this.esc = false;
         this.enter = false;
+        this.key1 = false;
+        this.key2 = false;
+        this.key3 = false;
+        this.key4 = false;
         this._trackingKeys = false;
         this._handleKeyDown = this.onKeyDown.bind(this);
         this._handleKeyUp = this.onKeyUp.bind(this);
@@ -38,9 +50,17 @@ export class ArrowSpaceEnterEscKeys {
             'ArrowRight': 'arrowRight',
             'ArrowUp': 'arrowUp',
             'ArrowDown': 'arrowDown',
+            'w': 'arrowUp',
+            's': 'arrowDown',
+            'a': 'arrowLeft',
+            'd': 'arrowRight',
             ' ': 'space',
             'Escape': 'esc',
-            'Enter': 'enter'
+            'Enter': 'enter',
+            '1': 'key1',
+            '2': 'key2',
+            '3': 'key3',
+            '4': 'key4',
         };
     }
 
@@ -53,6 +73,10 @@ export class ArrowSpaceEnterEscKeys {
             space: this.space,
             esc: this.esc,
             enter: this.enter,
+            key1: this.key1,
+            key2: this.key2,
+            key3: this.key3,
+            key4: this.key4,
         };
     }
 

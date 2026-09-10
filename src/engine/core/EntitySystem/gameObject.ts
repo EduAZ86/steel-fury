@@ -1,11 +1,10 @@
-import { UUID } from "crypto";
 import { v4 as uuidv4 } from 'uuid';
 import { Transform } from "./transform";
 import { RigidBody2D } from "./rigidBody2D";
 import { Collision2D } from "../Collision2D/Collision2D";
 import { CollisionData, bodyType, magnitudes } from "./types";
 export class GameObject {
-    id: UUID;
+    id: string;
     name: string;
     active: boolean;
     destroyed: boolean;
@@ -14,7 +13,7 @@ export class GameObject {
     constructor(name: string, transform: Transform, magnitudes: magnitudes, bodyType: bodyType) {
         this.active = true;
         this.name = name;
-        this.id = uuidv4() as UUID;
+        this.id = uuidv4();
         this.transform = transform;
         this.destroyed = false;
         this.rigidBody = new RigidBody2D(
@@ -49,7 +48,7 @@ export class GameObject {
                 directionCollision: findCollisions.onCollision(),
                 localColliderType: this.rigidBody.bodyType,
                 otherColliderType: collider.rigidBody.bodyType,
-                relativeVelocities: this.rigidBody.magnitudes.velocity.Substract(collider.rigidBody.magnitudes.velocity),
+                relativeVelocities: this.rigidBody.magnitudes.velocity.Subtract(collider.rigidBody.magnitudes.velocity),
             }
             allCollitions.push(collisionData);
         });

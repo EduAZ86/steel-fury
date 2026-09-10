@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+<!-- Artillery: yellow, long gun -->
+<!-- Hull outline -->
+<rect x="7" y="7" width="18" height="24" fill="#713F12"/>
+<!-- Hull body -->
+<rect x="8" y="8" width="16" height="22" fill="#EAB308"/>
+<!-- Hull bottom shading -->
+<rect x="8" y="24" width="16" height="6" fill="#A16207"/>
+<!-- Hull top highlight -->
+<rect x="9" y="9" width="14" height="3" fill="#FACC15"/>
+<!-- Left tread -->
+<rect x="2" y="4" width="6" height="26" fill="#262626"/>
+<rect x="3" y="5" width="4" height="24" fill="#404040"/>
+<rect x="3" y="8" width="4" height="2" fill="#6b7280"/>
+<rect x="3" y="14" width="4" height="2" fill="#6b7280"/>
+<rect x="3" y="20" width="4" height="2" fill="#6b7280"/>
+<rect x="3" y="26" width="4" height="2" fill="#6b7280"/>
+<!-- Right tread -->
+<rect x="24" y="4" width="6" height="26" fill="#262626"/>
+<rect x="25" y="5" width="4" height="24" fill="#404040"/>
+<rect x="25" y="8" width="4" height="2" fill="#6b7280"/>
+<rect x="25" y="14" width="4" height="2" fill="#6b7280"/>
+<rect x="25" y="20" width="4" height="2" fill="#6b7280"/>
+<rect x="25" y="26" width="4" height="2" fill="#6b7280"/>
+<!-- Turret outline -->
+<rect x="11" y="12" width="10" height="10" fill="#713F12"/>
+<!-- Turret -->
+<rect x="12" y="13" width="8" height="8" fill="#FACC15"/>
+<rect x="12" y="18" width="8" height="3" fill="#A16207"/>
+<!-- Long thin barrel -->
+<rect x="15" y="0" width="2" height="16" fill="#451A03"/>
+<!-- Muzzle -->
+<rect x="14" y="0" width="4" height="2" fill="#451A03"/>
+</svg>

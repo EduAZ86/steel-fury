@@ -1,20 +1,12 @@
 import { CanvasHandler } from "@/engine/core/Render/canvasHandler";
 import { SpriteRenderer } from "@/engine/core/Render/spritesRender";
 import { AssetLoader } from "@/engine/core/Render/AssetLoader";
-import { IRenderable } from "@/engine/core/Render/RenderSystem";
 import { Tank } from "../entities/Tank";
 import { Bullet } from "../entities/Bullet";
-import { tileType } from "../maps/types";
+import { Enemy } from "../entities/enemies/Enemy";
+import { Cell } from "../maps/types";
 import { MapData } from "../maps/testMap";
-
-const TILE_COLORS: Record<tileType, string> = {
-    empty: '#1a1a2e',
-    brick: '#b45309',
-    steel: '#9ca3af',
-    water: '#3b82f6',
-    forest: '#166534',
-    base: '#dc2626',
-};
+import { loadSprite } from "../assets/loadAssets";
 
 export class GameRenderer {
     private ctx: CanvasRenderingContext2D;
@@ -24,8 +16,9 @@ export class GameRenderer {
     private mapData: MapData | null = null;
     private tank: Tank | null = null;
     private bullets: Bullet[] = [];
-    private enemies: IRenderable[] = [];
-    private enemyColors: Map<string, string> = new Map();
+    private enemies: Enemy[] = [];
+
+    private frame: number = 0;
 
     constructor(canvasHandler: CanvasHandler, spriteRenderer: SpriteRenderer, assetLoader: AssetLoader) {
         this.ctx = canvasHandler.context;
@@ -45,9 +38,12 @@ export class GameRenderer {
         this.bullets = bullets;
     }
 
-    public setEnemies(enemies: IRenderable[], colors?: Map<string, string>) {
+    public setEnemies(enemies: Enemy[]) {
         this.enemies = enemies;
-        if (colors) this.enemyColors = colors;
+    }
+
+    public incrementFrame() {
+        this.frame++;
     }
 
     public drawMap = () => {
@@ -56,39 +52,62 @@ export class GameRenderer {
 
         for (let row = 0; row < tiles.length; row++) {
             for (let col = 0; col < tiles[row].length; col++) {
-                const tile = tiles[row][col];
-                this.drawTile(col * tileSize, row * tileSize, tileSize, tile);
+                const cell = tiles[row][col];
+                this.drawTile(col * tileSize, row * tileSize, tileSize, cell);
             }
         }
     };
 
-    private drawTile(x: number, y: number, size: number, tile: tileType) {
-        const baseColor = TILE_COLORS[tile];
+    private drawTile(x: number, y: number, size: number, cell: Cell) {
+        const sprite = loadSprite(this.assetLoader, cell.type);
+        if (sprite) {
+            const sx = size / sprite.width;
+            const sy = size / sprite.height;
+            this.spriteRenderer.drawSpriteAt(this.ctx, sprite, x + size / 2, y + size / 2, { scaleX: sx, scaleY: sy });
+            return;
+        }
+
+        const color = cell.properties.color;
         const half = size / 2;
 
-        this.spriteRenderer.drawRect(this.ctx, x, y, size, size, { color: '#1a1a2e' });
-        if (tile === 'empty') return;
+        if (cell.type === 'ground') {
+            this.spriteRenderer.drawRect(this.ctx, x, y, size, size, { color });
+            return;
+        }
 
-        if (tile === 'brick') {
-            this.spriteRenderer.drawRect(this.ctx, x, y, size, size, { color: baseColor });
+        if (cell.type === 'hardwall' || cell.type === 'hardwall_damaged') {
+            this.spriteRenderer.drawRect(this.ctx, x, y, size, size, { color });
+            const q = size / 4;
+            this.spriteRenderer.drawRect(this.ctx, x + 1, y + 1, q * 2 - 1, q * 2 - 1, { color: '#9ca3af' });
+            this.spriteRenderer.drawRect(this.ctx, x + q * 2 + 1, y + 1, q * 2 - 1, q * 2 - 1, { color: '#9ca3af' });
+            this.spriteRenderer.drawRect(this.ctx, x + 1, y + q * 2 + 1, q * 2 - 1, q * 2 - 1, { color: '#9ca3af' });
+            this.spriteRenderer.drawRect(this.ctx, x + q * 2 + 1, y + q * 2 + 1, q * 2 - 1, q * 2 - 1, { color: '#9ca3af' });
+            return;
+        }
+
+        if (cell.type === 'brick') {
+            this.spriteRenderer.drawRect(this.ctx, x, y, size, size, { color });
             this.spriteRenderer.drawRect(this.ctx, x + 2, y + 2, half - 3, half - 3, { color: '#92400e' });
             this.spriteRenderer.drawRect(this.ctx, x + half + 1, y + 2, half - 3, half - 3, { color: '#92400e' });
             this.spriteRenderer.drawRect(this.ctx, x + 2, y + half + 1, half - 3, half - 3, { color: '#92400e' });
             this.spriteRenderer.drawRect(this.ctx, x + half + 1, y + half + 1, half - 3, half - 3, { color: '#92400e' });
-        } else if (tile === 'steel') {
-            this.spriteRenderer.drawRect(this.ctx, x, y, size, size, { color: baseColor, strokeColor: '#6b7280', strokeWidth: 1 });
+        } else if (cell.type === 'steel') {
+            this.spriteRenderer.drawRect(this.ctx, x, y, size, size, { color, strokeColor: '#6b7280', strokeWidth: 1 });
             this.spriteRenderer.drawRect(this.ctx, x + 4, y + 4, size - 8, size - 8, { color: '#d1d5db' });
-        } else if (tile === 'water') {
+        } else if (cell.type === 'water') {
             this.spriteRenderer.drawRect(this.ctx, x, y, size, size, { color: '#1e40af' });
-            this.spriteRenderer.drawRect(this.ctx, x + 2, y + size / 3, size - 4, 3, { color: '#60a5fa', alpha: 0.7 });
-            this.spriteRenderer.drawRect(this.ctx, x + 6, y + size * 2 / 3, size - 12, 2, { color: '#93c5fd', alpha: 0.5 });
-        } else if (tile === 'forest') {
+            const waveOffset = Math.sin(this.frame * 0.08 + x * 0.05) * 2;
+            this.spriteRenderer.drawRect(this.ctx, x + 2, y + size / 3 + waveOffset, size - 4, 3, { color: '#60a5fa', alpha: 0.7 });
+            this.spriteRenderer.drawRect(this.ctx, x + 6, y + size * 2 / 3 - waveOffset, size - 12, 2, { color: '#93c5fd', alpha: 0.5 });
+        } else if (cell.type === 'forest') {
             this.spriteRenderer.drawRect(this.ctx, x, y, size, size, { color: '#1a1a2e' });
-            this.spriteRenderer.drawRect(this.ctx, x + 2, y + 2, size - 4, size - 4, { color: baseColor });
+            this.spriteRenderer.drawRect(this.ctx, x + 2, y + 2, size - 4, size - 4, { color: '#166534' });
             this.spriteRenderer.drawCircle(this.ctx, x + half, y + half, half - 4, { color: '#22c55e', alpha: 0.6 });
-        } else if (tile === 'base') {
+        } else if (cell.type === 'base') {
             this.spriteRenderer.drawRect(this.ctx, x, y, size, size, { color: '#7f1d1d', strokeColor: '#dc2626', strokeWidth: 2 });
             this.spriteRenderer.drawCircle(this.ctx, x + half, y + half, half / 2, { color: '#fbbf24' });
+        } else {
+            this.spriteRenderer.drawRect(this.ctx, x, y, size, size, { color });
         }
     }
 
@@ -104,9 +123,11 @@ export class GameRenderer {
         const rotation = this.tank.rotation;
         const size = this.tank.gameObject.transform.scale.x;
 
-        const sprite = this.assetLoader.get('playerTank');
+        const sprite = loadSprite(this.assetLoader, 'playerTank');
         if (sprite) {
-            this.spriteRenderer.drawSpriteAt(this.ctx, sprite, pos.x, pos.y, { rotation });
+            const sx = size / sprite.width;
+            const sy = size / sprite.height;
+            this.spriteRenderer.drawSpriteAt(this.ctx, sprite, pos.x, pos.y, { rotation, scaleX: sx, scaleY: sy });
         } else {
             this.drawTankPlaceholder(pos.x, pos.y, size, rotation, '#4ade80', '#166534');
         }
@@ -137,11 +158,13 @@ export class GameRenderer {
         for (const bullet of this.bullets) {
             if (!bullet.isAlive) continue;
             const pos = bullet.position;
-            const size = bullet.gameObject.transform.scale.x;
+            const size = bullet.config.size;
 
-            const sprite = this.assetLoader.get('bullet');
+            const sprite = loadSprite(this.assetLoader, 'bullet');
             if (sprite) {
-                this.spriteRenderer.drawSpriteAt(this.ctx, sprite, pos.x, pos.y);
+                const sx = size / sprite.width;
+                const sy = size / sprite.height;
+                this.spriteRenderer.drawSpriteAt(this.ctx, sprite, pos.x, pos.y, { scaleX: sx, scaleY: sy });
             } else {
                 this.spriteRenderer.drawCircle(this.ctx, pos.x, pos.y, size / 2, {
                     color: '#fbbf24', strokeColor: '#f59e0b', strokeWidth: 1,
@@ -152,12 +175,26 @@ export class GameRenderer {
 
     private drawEnemies() {
         for (const enemy of this.enemies) {
-            const color = this.enemyColors.get(enemy.name) || '#ef4444';
+            if (!enemy.isAlive) continue;
             const pos = enemy.position;
             const rotation = enemy.rotation;
-            const size = enemy.scale.x;
+            const size = enemy.config.size;
 
-            this.drawTankPlaceholder(pos.x, pos.y, size, rotation, color, '#7f1d1d');
+            const sprite = loadSprite(this.assetLoader, enemy.enemyClass);
+            if (sprite) {
+                const sx = size / sprite.width;
+                const sy = size / sprite.height;
+                this.spriteRenderer.drawSpriteAt(this.ctx, sprite, pos.x, pos.y, { rotation, scaleX: sx, scaleY: sy });
+            } else {
+                this.drawTankPlaceholder(pos.x, pos.y, size, rotation, enemy.config.color, enemy.config.darkColor);
+            }
+
+            if (enemy.health < enemy.config.health) {
+                this.spriteRenderer.drawHealthBar(
+                    this.ctx, pos.x - size / 2, pos.y - size / 2 - 8, size, 4,
+                    enemy.health, enemy.config.health
+                );
+            }
         }
     }
 
