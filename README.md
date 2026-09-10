@@ -1,7 +1,7 @@
 # Forge2D
 
 Motor 2D minimalista y extensible para el navegador, escrito en TypeScript sobre
-Canvas API. **El motor es el producto; el juego es solo una instancia.** Incluye un
+Canvas API. Incluye un
 lanzador web (landing + modal full-screen) y un juego de ejemplo completo.
 
 ## Descripción del motor
@@ -13,15 +13,15 @@ importa código del juego.
 
 ### Componentes (`src/engine`)
 
-| Módulo | Export | Qué hace |
-| --- | --- | --- |
-| MainLoop | `MainLoop` | Bucle con `requestAnimationFrame` y delta-time. Ejecuta las fases de update (`movementOfEntities`, `collisionHandler`, `updateState`, `updatePhysics`, `inputsHandler`, `updateIA`, `syncMultiplayerState?`) y de draw (`drawMap`, `drawEntities`, `drawEntitiesState`, `drawEffects`). `start()` / `stop()`, y `getDeltaTime` en ms. |
-| DeltaTime | `DeltaTime` | Calcula el tiempo entre frames. |
-| EntitySystem | `Entity`, `GameObject`, `Transform`, `RigidBody2D`, `Vector2D`, `SquareShape` | Modelo de objetos: `GameObject` (id, transform, rigid body, `Destroy`, `OnCollision2D`), `Entity` (health, coroutines, ciclo `Awake/Start/Update/OnDestroy`) y geometría. |
-| Collision2D | `Collision2D` | Colisión AABB entre `SquareShape`; devuelve la cara de impacto (`top`/`bottom`/`left`/`right`) y permite calcular velocidad relativa. |
-| Render | `CanvasHandler`, `SpriteRenderer`, `AssetLoader`, `RenderSystem` | `CanvasHandler` inicializa/redimensiona el canvas; `SpriteRenderer` dibuja sprites (con rotación, escala, pivote y alpha), rectángulos, círculos, texto y barras de vida; `AssetLoader` carga y cachea imágenes; `RenderSystem` delega el dibujo en el `IGameRenderer` del juego. |
-| Input | `Inputs`, `ArrowSpaceEnterEscKeys`, `MouseInput` | Entrada de teclado (flechas, espacio, enter, esc) y ratón (click, rueda, posición), con `startTracking` / `stopTracking`. |
-| Screen | `ScreenSize` | Dimensiones de la ventana y callback `onResize`. |
+| Módulo       | Export                                                                        | Qué hace                                                                                                                                                                                                                                                                                                                              |
+| ------------ | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| MainLoop     | `MainLoop`                                                                    | Bucle con `requestAnimationFrame` y delta-time. Ejecuta las fases de update (`movementOfEntities`, `collisionHandler`, `updateState`, `updatePhysics`, `inputsHandler`, `updateIA`, `syncMultiplayerState?`) y de draw (`drawMap`, `drawEntities`, `drawEntitiesState`, `drawEffects`). `start()` / `stop()`, y `getDeltaTime` en ms. |
+| DeltaTime    | `DeltaTime`                                                                   | Calcula el tiempo entre frames.                                                                                                                                                                                                                                                                                                       |
+| EntitySystem | `Entity`, `GameObject`, `Transform`, `RigidBody2D`, `Vector2D`, `SquareShape` | Modelo de objetos: `GameObject` (id, transform, rigid body, `Destroy`, `OnCollision2D`), `Entity` (health, coroutines, ciclo `Awake/Start/Update/OnDestroy`) y geometría.                                                                                                                                                             |
+| Collision2D  | `Collision2D`                                                                 | Colisión AABB entre `SquareShape`; devuelve la cara de impacto (`top`/`bottom`/`left`/`right`) y permite calcular velocidad relativa.                                                                                                                                                                                                 |
+| Render       | `CanvasHandler`, `SpriteRenderer`, `AssetLoader`, `RenderSystem`              | `CanvasHandler` inicializa/redimensiona el canvas; `SpriteRenderer` dibuja sprites (con rotación, escala, pivote y alpha), rectángulos, círculos, texto y barras de vida; `AssetLoader` carga y cachea imágenes; `RenderSystem` delega el dibujo en el `IGameRenderer` del juego.                                                     |
+| Input        | `Inputs`, `ArrowSpaceEnterEscKeys`, `MouseInput`                              | Entrada de teclado (flechas, espacio, enter, esc) y ratón (click, rueda, posición), con `startTracking` / `stopTracking`.                                                                                                                                                                                                             |
+| Screen       | `ScreenSize`                                                                  | Dimensiones de la ventana y callback `onResize`.                                                                                                                                                                                                                                                                                      |
 
 Todo se re-exporta desde `@/engine` (`src/engine/index.ts`).
 
@@ -30,13 +30,23 @@ Todo se re-exporta desde `@/engine` (`src/engine/index.ts`).
 1. **Crea el canvas y el sistema de render**
 
 ```ts
-import { CanvasHandler, RenderSystem, SpriteRenderer, AssetLoader, MainLoop } from "@/engine";
+import {
+  CanvasHandler,
+  RenderSystem,
+  SpriteRenderer,
+  AssetLoader,
+  MainLoop,
+} from "@/engine";
 
 const canvasHandler = new CanvasHandler();
 canvasHandler.init(canvasElement);
 canvasHandler.resize(cols * tileSize, rows * tileSize);
 
-const renderSystem = new RenderSystem(canvasHandler, new SpriteRenderer(), new AssetLoader());
+const renderSystem = new RenderSystem(
+  canvasHandler,
+  new SpriteRenderer(),
+  new AssetLoader(),
+);
 ```
 
 2. **Implementa el `IGameRenderer` de tu juego** (drawMap, drawEntities,
@@ -47,7 +57,9 @@ const renderSystem = new RenderSystem(canvasHandler, new SpriteRenderer(), new A
 
 ```ts
 const updateIteration = {
-  movementOfEntities: () => { /* tu lógica */ },
+  movementOfEntities: () => {
+    /* tu lógica */
+  },
   collisionHandler: () => {},
   updateState: () => {},
   updatePhysics: () => {},
