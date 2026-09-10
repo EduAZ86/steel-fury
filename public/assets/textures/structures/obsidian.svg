@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+<!-- Softened obsidian -->
+<rect width="32" height="32" fill="#5A5A6A"/>
+<rect x="0" y="0" width="8" height="8" fill="#4A4A5A"/>
+<rect x="16" y="0" width="8" height="8" fill="#4A4A5A"/>
+<rect x="8" y="8" width="8" height="8" fill="#4A4A5A"/>
+<rect x="24" y="8" width="8" height="8" fill="#4A4A5A"/>
+<rect x="0" y="16" width="8" height="8" fill="#4A4A5A"/>
+<rect x="16" y="16" width="8" height="8" fill="#4A4A5A"/>
+<rect x="8" y="24" width="8" height="8" fill="#4A4A5A"/>
+<rect x="24" y="24" width="8" height="8" fill="#4A4A5A"/>
+</svg>

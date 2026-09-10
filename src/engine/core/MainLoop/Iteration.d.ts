@@ -2,7 +2,7 @@ export interface updateIteration {
     movementOfEntities: () => void;
     collisionHandler: () => void;
     updateState: () => void;
-    updatePysics: () => void;
+    updatePhysics: () => void;
     inputsHandler: () => void;
     updateIA: () => void;
     syncMultiplayerState?: () => void

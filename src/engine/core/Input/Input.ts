@@ -19,15 +19,15 @@ export class Inputs {
         if (this._isTracking) {
             const inputData = [];
             if (this.inputsDevice.includes('Keyboard')) {
+                inputData.push(this.keyboardInput.keysStatus)
+            }
+            if (this.inputsDevice.includes('Mouse')) {
                 inputData.push({
                     Left: this.mouseInput.leftClick,
                     Right: this.mouseInput.rightClick,
                     scroll: this.mouseInput.scrollDelta,
                     position: this.mouseInput.mousePosition
                 })
-            }
-            if (this.inputsDevice.includes('Mouse')) {
-                inputData.push(this.keyboardInput.keysStatus)
             }
             return inputData
         }

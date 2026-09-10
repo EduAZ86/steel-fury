@@ -27,7 +27,7 @@ export class Vector2D {
         return new Vector2D(this.x + vector.x, this.y + vector.y);
     }
 
-    public Substract(vector: Vector2D) {
+    public Subtract(vector: Vector2D) {
         return new Vector2D(this.x - vector.x, this.y - vector.y);
     }
 
@@ -59,7 +59,7 @@ export class Vector2D {
         const cos = Math.cos(angleRad);
         const sin = Math.sin(angleRad);
         let xPrime = (x * cos) - (y * sin);
-        let yPrime = (x * sin) - (y * cos);
+        let yPrime = (x * sin) + (y * cos);
         xPrime += origin.x;
         yPrime += origin.y;
         return new Vector2D(xPrime, yPrime);

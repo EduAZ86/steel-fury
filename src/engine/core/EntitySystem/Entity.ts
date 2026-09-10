@@ -1,30 +1,30 @@
 import { GameObject } from "./gameObject";
-import { RigidBody2D } from "./rigidBody2D";
-import { Iposition, Isize, bodyType, magnitudes } from "./types";
+import { Iposition, Isize, bodyType } from "./types";
+
+interface Coroutine {
+    _OnUpdate: () => void;
+    _ConditionFullfilled: () => boolean;
+    _Next: () => void;
+    isFinished: boolean;
+}
+
 export class Entity {
     name: string;
     health: number;
     started: boolean;
-    coroutines: any[];
+    coroutines: Coroutine[];
     gameObject: GameObject;
-    rigidBody: RigidBody2D;
-    constructor(name: string, bodyType: bodyType, health: number, magnitudes: magnitudes, gameObject: GameObject) {
+    constructor(name: string, bodyType: bodyType, health: number, gameObject: GameObject) {
         this.started = false;
         this.coroutines = [];
         this.gameObject = gameObject;
 
         this.name = name;
         this.health = health;
-        this.rigidBody = new RigidBody2D(
-            bodyType,
-            magnitudes,
-            gameObject.transform.position,
-            gameObject.transform.scale
-        );
     };
 
     get getTransform() { return this.gameObject.transform; }
-    ;
+    get rigidBody() { return this.gameObject.rigidBody; }
     get getStarted() { return this.started; }
     ;
     Awake() {
@@ -32,9 +32,9 @@ export class Entity {
     Start() {
     };
     Update(newPosition?: Iposition, newScale?: Isize, newRotation?: number) {
-        newPosition && this.gameObject.transform.updatePosition(newPosition);
-        newScale && this.gameObject.transform.updateScale(newScale);
-        newRotation && this.gameObject.transform.updateRotation(newRotation);
+        if (newPosition !== undefined) this.gameObject.transform.updatePosition(newPosition);
+        if (newScale !== undefined) this.gameObject.transform.updateScale(newScale);
+        if (newRotation !== undefined) this.gameObject.transform.updateRotation(newRotation);
     };
     OnDestroy() {
         this.gameObject.Destroy();

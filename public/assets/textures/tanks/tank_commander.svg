@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+<!-- Commander: gold, elite -->
+<!-- Hull outline -->
+<rect x="6" y="6" width="20" height="25" fill="#7F1D1D"/>
+<!-- Hull body -->
+<rect x="7" y="7" width="18" height="23" fill="#FBBF24"/>
+<!-- Hull bottom shading -->
+<rect x="7" y="24" width="18" height="6" fill="#B45309"/>
+<!-- Hull top highlight -->
+<rect x="8" y="8" width="16" height="3" fill="#FDE68A"/>
+<!-- Hull stripe -->
+<rect x="9" y="15" width="14" height="2" fill="#B45309"/>
+<!-- Left tread -->
+<rect x="1" y="4" width="6" height="26" fill="#262626"/>
+<rect x="2" y="5" width="4" height="24" fill="#404040"/>
+<rect x="2" y="8" width="4" height="2" fill="#6b7280"/>
+<rect x="2" y="14" width="4" height="2" fill="#6b7280"/>
+<rect x="2" y="20" width="4" height="2" fill="#6b7280"/>
+<rect x="2" y="26" width="4" height="2" fill="#6b7280"/>
+<!-- Right tread -->
+<rect x="25" y="4" width="6" height="26" fill="#262626"/>
+<rect x="26" y="5" width="4" height="24" fill="#404040"/>
+<rect x="26" y="8" width="4" height="2" fill="#6b7280"/>
+<rect x="26" y="14" width="4" height="2" fill="#6b7280"/>
+<rect x="26" y="20" width="4" height="2" fill="#6b7280"/>
+<rect x="26" y="26" width="4" height="2" fill="#6b7280"/>
+<!-- Turret outline -->
+<rect x="10" y="10" width="12" height="12" fill="#7F1D1D"/>
+<!-- Turret -->
+<rect x="11" y="11" width="10" height="10" fill="#FDE68A"/>
+<rect x="11" y="18" width="10" height="3" fill="#B45309"/>
+<!-- Barrel -->
+<rect x="14" y="0" width="4" height="12" fill="#451A03"/>
+<rect x="14" y="0" width="1" height="12" fill="#B45309"/>
+<!-- Muzzle brake -->
+<rect x="13" y="0" width="6" height="2" fill="#451A03"/>
+</svg>

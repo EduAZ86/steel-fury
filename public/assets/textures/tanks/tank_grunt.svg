@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+<!-- Grunt: orange/brown, medium -->
+<!-- Hull outline -->
+<rect x="7" y="7" width="18" height="24" fill="#5A3208"/>
+<!-- Hull body -->
+<rect x="8" y="8" width="16" height="22" fill="#D08040"/>
+<!-- Hull bottom shading -->
+<rect x="8" y="24" width="16" height="6" fill="#A05010"/>
+<!-- Hull top highlight -->
+<rect x="9" y="9" width="14" height="3" fill="#E8A060"/>
+<!-- Left tread -->
+<rect x="2" y="4" width="6" height="26" fill="#262626"/>
+<rect x="3" y="5" width="4" height="24" fill="#404040"/>
+<rect x="3" y="8" width="4" height="2" fill="#6b7280"/>
+<rect x="3" y="14" width="4" height="2" fill="#6b7280"/>
+<rect x="3" y="20" width="4" height="2" fill="#6b7280"/>
+<rect x="3" y="26" width="4" height="2" fill="#6b7280"/>
+<!-- Right tread -->
+<rect x="24" y="4" width="6" height="26" fill="#262626"/>
+<rect x="25" y="5" width="4" height="24" fill="#404040"/>
+<rect x="25" y="8" width="4" height="2" fill="#6b7280"/>
+<rect x="25" y="14" width="4" height="2" fill="#6b7280"/>
+<rect x="25" y="20" width="4" height="2" fill="#6b7280"/>
+<rect x="25" y="26" width="4" height="2" fill="#6b7280"/>
+<!-- Turret outline -->
+<rect x="11" y="11" width="10" height="11" fill="#5A3208"/>
+<!-- Turret -->
+<rect x="12" y="12" width="8" height="9" fill="#E8A060"/>
+<rect x="12" y="18" width="8" height="3" fill="#A05010"/>
+<!-- Barrel -->
+<rect x="14" y="0" width="4" height="13" fill="#3D2005"/>
+<rect x="14" y="0" width="1" height="13" fill="#A05010"/>
+<!-- Muzzle -->
+<rect x="13" y="0" width="6" height="2" fill="#3D2005"/>
+</svg>
